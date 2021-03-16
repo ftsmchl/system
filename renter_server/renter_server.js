@@ -159,7 +159,7 @@ app.get('/auctionFinalize', async(req, res)=>{
 	//console.log("to contractAddress einai ", contractAddress)
 	console.log("winningBidder of the auction is : ", winningBidder)
 	console.log("agora Contract Address is : ", agoraContractAddress)
-	res.send(accs[1])
+	res.send(winningBidder)
 
 })
 
@@ -168,7 +168,7 @@ app.get('/auctionCreate', async (req,res)=>{
 	let accs = await web3.eth.getAccounts(); 
 	let events = await testEvent()
 
-	//calculating a random number betwwen 0 - 2^256
+	//calculating a random number between 0 - 2^256
 	let randomNumber = Math.random() * (max - min + 1) + min
 
 	let taskID = web3.utils.sha3(String(randomNumber)) 

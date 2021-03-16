@@ -9,7 +9,8 @@ import (
 )
 
 type Host struct {
-	auctionsBid []AuctionContract
+	auctionsBid      map[string]AuctionContract
+	storageContracts map[string]StorageContract
 }
 
 type AuctionContract struct {
@@ -20,8 +21,18 @@ type AuctionContract struct {
 	InitialBid int    `json : "initialbid"`
 }
 
+type StorageContract struct {
+	Address  string
+	TaskID   string
+	Owner    string
+	Duration int
+}
+
 func New() *Host {
-	return &Host{}
+	return &Host{
+		auctionsBid:      make(map[string]AuctionContract),
+		storageContracts: make(map[string]StorageContract),
+	}
 }
 
 func (h *Host) FindContracts() {
@@ -42,18 +53,30 @@ func (h *Host) FindContracts() {
 	fmt.Println("diavasa to text mages mou  p prepei na einai OK")
 	//fmt.Println("To text tou response einai : ", string(text))
 
-	h.auctionsBid = append(h.auctionsBid, auctionContract)
-	fmt.Println("To address tou auction einai : ", auctionContract.Address)
-	fmt.Println("To taskID tou auction einai : ", auctionContract.TaskID)
-	fmt.Println("O owner  tou auction einai : ", auctionContract.Owner)
-	fmt.Println("To initialBid  tou auction einai : ", auctionContract.InitialBid)
-	fmt.Println("To Duration  tou auction einai : ", auctionContract.Duration)
+	address := auctionContract.Address
+	taskid := auctionContract.TaskID
+	duration := auctionContract.Duration
+	owner := auctionContract.Owner
+	initialbid := auctionContract.InitialBid
 
-	time.Sleep(15 * time.Second)
-	fmt.Println("I slept for 15 seconds and i am gonna see who won the auction")
+	//h.auctionsBid = append(h.auctionsBid, auctionContract)
+	h.auctionsBid[auctionContract.TaskID] = auctionContract
 
-	resp2, err := http.Get("http://localhost:8001/checkWhoWonAuction?auctionAddress=" + auctionContract.Address)
-	text2, _ := ioutil.ReadAll(resp2.Body)
-	fmt.Println("text2 is ", string(text2))
+	//check if the auctionContract was encoded properly
+	if address != "" && taskid != "" && duration != 0 && initialbid != 0 && owner != "" {
+		fmt.Println("Auction found!!")
+		fmt.Println("Address : ", auctionContract.Address)
+		fmt.Println("TaskID : ", auctionContract.TaskID)
+		fmt.Println("Owner(renter) : ", auctionContract.Owner)
+		fmt.Println("InitialBid : ", auctionContract.InitialBid)
+		fmt.Println("Duration(ms) : ", auctionContract.Duration)
+
+		time.Sleep(15 * time.Second)
+		fmt.Println("I slept for 15 seconds and i am gonna see who won the auction")
+
+		resp2, _ := http.Get("http://localhost:8001/checkWhoWonAuction?auctionAddress=" + auctionContract.Address)
+		text2, _ := ioutil.ReadAll(resp2.Body)
+		fmt.Println("text2 is ", string(text2))
+	}
 
 }

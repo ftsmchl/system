@@ -20,7 +20,10 @@ type Renter struct {
 
 //constructor of renter module
 func New() *Renter {
-	renter := &Renter{}
+	renter := &Renter{
+		auctionContracts: make(map[string]AuctionContract),
+		storageContracts: make(map[string]StorageContract),
+	}
 	return renter
 }
 
@@ -44,6 +47,7 @@ func (r *Renter) AuctionCreate() {
 	var auctionContract AuctionContract
 	var storageContract StorageContract
 
+	//sends an http request and receives an auctionContract without the host
 	resp, err := http.Get("http://localhost:8000/auctionCreate")
 	if err != nil {
 		fmt.Println(err)
@@ -69,7 +73,7 @@ func (r *Renter) AuctionCreate() {
 		fmt.Println("An auction contract has been created !!")
 		fmt.Println("Address : ", auctionContract.Address)
 		fmt.Println("TaskID : ", auctionContract.TaskID)
-		fmt.Println("FileContract Duration : ", auctionContract.Duration)
+		fmt.Println("FileContract Duration(ms) : ", auctionContract.Duration)
 		fmt.Println("Initial Bid : ", auctionContract.InitialBid)
 		fmt.Println("Owner : ", auctionContract.Owner)
 		fmt.Println("WinningBidder(host) : ", auctionContract.Host)
@@ -88,10 +92,16 @@ func (r *Renter) AuctionCreate() {
 		text2, err := ioutil.ReadAll(resp2.Body)
 		fmt.Println("O winningBidder tou auction to opoio molis egine finalized einai  : ", string(text2))
 
-		storageContract.Address = auctionContract.Address
-		storageContract.TaskID = auctionContract.TaskID
-		storageContract.Duration = auctionContract.Duration
-		storageContract.Host = string(text2)
+		//we need to check if text2 size is a valid ethereum account address
+		fmt.Println("Size of ethereum address is : ", len(text2))
+		if len(text2) == 42 {
+			storageContract.Address = auctionContract.Address
+			storageContract.TaskID = auctionContract.TaskID
+			storageContract.Duration = auctionContract.Duration
+			storageContract.Host = string(text2)
+		} else {
+			fmt.Println("There is not a winning bidder for our auction")
+		}
 		//we need lock
 		r.storageContracts[storageContract.TaskID] = storageContract
 	} else {
