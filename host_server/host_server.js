@@ -144,7 +144,7 @@ app.get('/findAuction', async (req, res)=>{
 								//auctionBid = 42 
 								let duration = parseInt(inspectingEvent.returnValues.duration)
 								//send the auction info  json encoded back to the host 
-								let data = JSON.stringify({address : inspectingEvent.returnValues.auctionContract, taskid : inspectingEvent.returnValues.taskid, 
+								let data = JSON.stringify({address : inspectingEvent.returnValues.auctionContract, taskid : inspectingEvent.returnValues.taskID, 
 								owner : inspectingEvent.returnValues.owner, initialbid : initialBid, duration : duration})
 								res.setHeader('Content-Type', 'application/json');
 								res.send(data)

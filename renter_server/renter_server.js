@@ -156,7 +156,6 @@ app.get('/auctionFinalize', async(req, res)=>{
 	var winningBidder
 
 	await auctionContract.methods.winningBidder().call().then(function(result) {winningBidder = result})
-	//console.log("to contractAddress einai ", contractAddress)
 	console.log("winningBidder of the auction is : ", winningBidder)
 	console.log("agora Contract Address is : ", agoraContractAddress)
 	res.send(winningBidder)

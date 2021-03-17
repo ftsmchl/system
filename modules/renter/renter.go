@@ -1,21 +1,20 @@
 package renter
 
 import (
-	//"github.com/gorilla/mux"
-	//"bufio"
-	//"log"
-	//"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
 	"time"
 )
 
 type Renter struct {
-	//auctionContracts []AuctionContract
-	auctionContracts map[string]AuctionContract
-	storageContracts map[string]StorageContract
+	auctionContracts   map[string]AuctionContract
+	auctionContractsMu sync.Mutex
+
+	storageContracts   map[string]StorageContract
+	storageContractsMu sync.Mutex
 }
 
 //constructor of renter module
@@ -43,7 +42,24 @@ type AuctionContract struct {
 	Host       string `json : "host"`
 }
 
-func (r *Renter) AuctionCreate() {
+func (r *Renter) PrintContracts() {
+	fmt.Println("---------------------")
+	fmt.Println("Storage Contracts")
+	r.storageContractsMu.Lock()
+	for _, value := range r.storageContracts {
+		fmt.Println("TaskID : ", value.TaskID)
+		fmt.Println("Contract Address : ", value.Address)
+		fmt.Println("Duration(ms) : ", value.Duration)
+		fmt.Println("Host : ", value.Host)
+		fmt.Println("")
+	}
+	r.storageContractsMu.Unlock()
+	fmt.Println("---------------------")
+}
+
+func (r *Renter) AuctionCreate(wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	var auctionContract AuctionContract
 	var storageContract StorageContract
 
@@ -60,7 +76,9 @@ func (r *Renter) AuctionCreate() {
 
 	//r.auctionContracts = append(r.auctionContracts, auctionContract)
 	//we need lock
+	r.auctionContractsMu.Lock()
 	r.auctionContracts[auctionContract.TaskID] = auctionContract
+	r.auctionContractsMu.Unlock()
 
 	address := auctionContract.Address
 	taskid := auctionContract.TaskID
@@ -103,7 +121,9 @@ func (r *Renter) AuctionCreate() {
 			fmt.Println("There is not a winning bidder for our auction")
 		}
 		//we need lock
+		r.storageContractsMu.Lock()
 		r.storageContracts[storageContract.TaskID] = storageContract
+		r.storageContractsMu.Unlock()
 	} else {
 		fmt.Println("Something went wrong while creating the auctionContract")
 		fmt.Println("text that was read from renterServer is ", string(text))

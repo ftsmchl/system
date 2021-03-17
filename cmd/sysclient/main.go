@@ -35,13 +35,13 @@ func hostfindContractscmd(cmd *cobra.Command, _ []string) {
 }
 
 func rentercreatecontractscmd(cmd *cobra.Command, _ []string) {
-	fmt.Println("Creating Contracts this may take a while..")
+	fmt.Println("Creating Contracts, this may take a while..")
 	err := httpClient.RenterCreateContracts()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("we called it")
+	fmt.Println("Creating contracts operation has finished")
 }
 
 var (

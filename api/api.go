@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
+	"sync"
 )
 
 func (api *API) ScoreHandler(w http.ResponseWriter, r *http.Request) {
@@ -14,8 +15,17 @@ func (api *API) ScoreHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) CreateAuctionHandler(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "3ekinaei o renter thn dhmiourgia twn contract agoraki mou\n")
-	api.renter.AuctionCreate()
+	//io.WriteString(w, "3ekinaei o renter thn dhmiourgia twn contract agoraki mou\n")
+
+	var wg sync.WaitGroup
+	//we are creating 2 contracts
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go api.renter.AuctionCreate(&wg)
+	}
+
+	wg.Wait()
+	api.renter.PrintContracts()
 }
 
 func (api *API) findContractsHandler(w http.ResponseWriter, r *http.Request) {
