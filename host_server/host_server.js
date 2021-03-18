@@ -130,6 +130,39 @@ app.get('/findAuction', async (req, res)=>{
 						console.log("To auction Address einai ", auctionAddress)
 						let auctionContract = new web3.eth.Contract(auctionjsonContent.abi, auctionAddress)
 						await auctionContract.methods.placeOffer(initialBid - 10).send({from : accs[2], gas : 6700000}, function(error, txHash){	
+							if (error) {
+								console.log("method place offer could not be called cause of an error")	
+							} else {
+								console.log("method place offer has been mined with txHash : ", txHash)		
+							}
+						})
+						.on('receipt', async function(receipt){
+							console.log("I placed an offer to auctionContract : ", auctionAddress)	
+							auctionBid = true
+							console.log("Eimai mesa sto method kai to auctionBid einai ", auctionBid)
+							let duration = parseInt(inspectingEvent.returnValues.duration)
+
+							//send the auction info json-encoded back to the host
+							let data = JSON.stringify({address : inspectingEvent.returnValues.auctionContract, taskid : inspectingEvent.returnValues.taskID, 
+							owner : inspectingEvent.returnValues.owner, initialbid : initialBid, duration : duration})
+							res.setHeader('Content-Type', 'application/json');
+							res.send(data)
+						})
+						.on('error', async function(error){
+							console.log("Something went wrong while placing the offer, we remove it from the list")
+							node = node.getNext()
+							auctionList.removeAt(position)
+							let data = error.JsonFind(error)
+							let reason = data.checkKey('reason')
+							console.log("reason : ", reason)
+
+						})
+						.catch(function(err){
+							console.log("There is an error when calling method place Offer")
+						})
+						
+						/*
+						await auctionContract.methods.placeOffer(initialBid - 10).send({from : accs[2], gas : 6700000}, function(error, txHash){	
 						//we found an error, probably the auction window to bid it has closed, so we remove it from our list
 							if (error) {
 								console.log("Something went wrong while placing the offer, we remove it from the list")
@@ -153,7 +186,7 @@ app.get('/findAuction', async (req, res)=>{
 							}
 						}).then(function(receipt){
 							console.log(receipt)
-						})
+						})*/
 					} else {
 					//we move to the next auction in our list 	
 						node = node.getNext()

@@ -125,7 +125,6 @@ auctionFactoryContract.events.StorageAuctionCreated({})
 
 
 app.get('/auctionFinalize', async(req, res)=>{
-	//res.setHeader('Content-Type', 'application/json')	
 	let accs = await web3.eth.getAccounts()
 
 	//get the auction contract address from the url
@@ -133,32 +132,38 @@ app.get('/auctionFinalize', async(req, res)=>{
 
 	//lowest offer is  hardcoded , we need to change it 
 	let lowestOffer = 990
-
 	let agoraContractAddress
-
 	let auctionContract = new web3.eth.Contract(auctionjsonContent.abi, auctionAddress)
+
 	//call the finalize method of the auction contract	
 	await auctionContract.methods.finalize().send({from : accs[1], value : lowestOffer, gas : 6700000},function(error, txHash){
 		if (error) {
-			console.log("Something went wrong while trying to finalize our auction")
-			console.log("To error einai " + error)
+			console.log("method finalize could not be called cause of an error")
 		} else {
-			console.log("function finalize has been mined with txHash : ", txHash)
+			console.log("method finalize has benn mined with txHash : ", txHash)
 		}
-	}).then(function(receipt){
-		console.log("receipt : ", receipt)
-		console.log("return value", receipt.events.AuctionFinalized.returnValues)
-		console.log("return value ", receipt.events.AuctionFinalized.returnValues.taskID)
-		console.log("return value ", receipt.events.AuctionFinalized.returnValues.agoraContract)
-		agoraContractAddress = receipt.events.AuctionFinalized.returnValues.agoraContract
-	})	
+	})
+	.on('receipt', async function(receipt){
+		console.log("receipt", receipt)
+		let agoraContractAddress = receipt.events.AuctionFinalized.returnValues.agoraContract
 
-	var winningBidder
+		//check from contract who won the auction
+		await auctionContract.methods.winningBidder().call().then(function(result){
+			console.log("winning Bidder : ", result)
+			res.send(result)
+		})
 
-	await auctionContract.methods.winningBidder().call().then(function(result) {winningBidder = result})
-	console.log("winningBidder of the auction is : ", winningBidder)
-	console.log("agora Contract Address is : ", agoraContractAddress)
-	res.send(winningBidder)
+		console.log("AgoraContract address is : ", agoraContractAddress)
+	})
+	.on('error', function(error){
+		let data = JsonFind(error.data)
+		let reason = data.checkKey('reason')
+		console.log("reason : ", reason)
+		res.send("no OK")
+	})
+	.catch(function(err){
+		console.log("There is an error when calling finalize")
+	})
 
 })
 

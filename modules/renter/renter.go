@@ -43,18 +43,18 @@ type AuctionContract struct {
 }
 
 func (r *Renter) PrintContracts() {
-	fmt.Println("---------------------")
 	fmt.Println("Storage Contracts")
 	r.storageContractsMu.Lock()
 	for _, value := range r.storageContracts {
+		fmt.Println("---------------------")
 		fmt.Println("TaskID : ", value.TaskID)
 		fmt.Println("Contract Address : ", value.Address)
 		fmt.Println("Duration(ms) : ", value.Duration)
 		fmt.Println("Host : ", value.Host)
+		fmt.Println("---------------------")
 		fmt.Println("")
 	}
 	r.storageContractsMu.Unlock()
-	fmt.Println("---------------------")
 }
 
 func (r *Renter) AuctionCreate(wg *sync.WaitGroup) {
@@ -108,22 +108,26 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup) {
 		defer resp2.Body.Close()
 
 		text2, err := ioutil.ReadAll(resp2.Body)
-		fmt.Println("O winningBidder tou auction to opoio molis egine finalized einai  : ", string(text2))
+		//fmt.Println("O winningBidder tou auction to opoio molis egine finalized einai  : ", string(text2))
 
 		//we need to check if text2 size is a valid ethereum account address
 		fmt.Println("Size of ethereum address is : ", len(text2))
+
+		//if len(text2) == 42 we have an auction winner
 		if len(text2) == 42 {
+			fmt.Println("O winningBidder tou auction to opoio molis egine finalized einai  : ", string(text2))
 			storageContract.Address = auctionContract.Address
 			storageContract.TaskID = auctionContract.TaskID
 			storageContract.Duration = auctionContract.Duration
 			storageContract.Host = string(text2)
+
+			r.storageContractsMu.Lock()
+			r.storageContracts[storageContract.TaskID] = storageContract
+			r.storageContractsMu.Unlock()
 		} else {
 			fmt.Println("There is not a winning bidder for our auction")
 		}
-		//we need lock
-		r.storageContractsMu.Lock()
-		r.storageContracts[storageContract.TaskID] = storageContract
-		r.storageContractsMu.Unlock()
+
 	} else {
 		fmt.Println("Something went wrong while creating the auctionContract")
 		fmt.Println("text that was read from renterServer is ", string(text))
