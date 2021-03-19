@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/ftsmchl/system/api/client"
+	"github.com/ftsmchl/system/helper"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -44,6 +45,18 @@ func rentercreatecontractscmd(cmd *cobra.Command, _ []string) {
 	fmt.Println("Creating contracts operation has finished")
 }
 
+func accountaddcmd(cmd *cobra.Command, args []string) {
+	fmt.Println("Connecting our node with an ethereum account..")
+
+	//checks if the string given is a valid ethereum address
+	if len(args[0]) == 42 && helper.IsHex(args[0]) {
+		fmt.Println("args[0]", args[0])
+		fmt.Println("Account has been connected !!")
+	} else {
+		fmt.Println("The address is not a valid ethereum address, try again giving a valid one!!")
+	}
+}
+
 var (
 	renterCmd = &cobra.Command{
 		Use:   "renter",
@@ -57,6 +70,13 @@ var (
 		Short: "Perform host actions",
 		Long:  "Find Contracts..",
 		Run:   hostcmd,
+	}
+
+	accountAddCmd = &cobra.Command{
+		Use:   "accountAdd",
+		Short: "Add an account for this node",
+		Long:  "Add an account for this node",
+		Run:   accountaddcmd,
 	}
 
 	renterCreateContractsCmd = &cobra.Command{
@@ -83,6 +103,7 @@ func main() {
 
 	root.AddCommand(renterCmd)
 	root.AddCommand(hostCmd)
+	root.AddCommand(accountAddCmd)
 
 	renterCmd.AddCommand(renterCreateContractsCmd)
 	hostCmd.AddCommand(hostFindContractsCmd)
