@@ -51,9 +51,15 @@ func accountaddcmd(cmd *cobra.Command, args []string) {
 	//checks if the string given is a valid ethereum address
 	if len(args[0]) == 42 && helper.IsHex(args[0]) {
 		fmt.Println("args[0]", args[0])
-		fmt.Println("Account has been connected !!")
 	} else {
 		fmt.Println("The address is not a valid ethereum address, try again giving a valid one!!")
+	}
+
+	err := httpClient.WalletSetAccount(args[0])
+	if err != nil {
+		fmt.Println("Something went wrong while adding our ethereum account address :", err)
+	} else {
+		fmt.Println("The ethereum account address has been set succesfully")
 	}
 }
 

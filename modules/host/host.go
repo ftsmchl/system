@@ -52,7 +52,6 @@ func (h *Host) FindContracts() {
 	text, _ := ioutil.ReadAll(resp.Body)
 	json.Unmarshal([]byte(text), &auctionContract)
 	fmt.Println("diavasa to text mages mou  p prepei na einai OK")
-	//fmt.Println("To text tou response einai : ", string(text))
 
 	address := auctionContract.Address
 	taskid := auctionContract.TaskID
