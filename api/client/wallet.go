@@ -1,8 +1,11 @@
 package client
 
-import ()
+import (
+	"fmt"
+)
 
-func (c *Client) WalletSetAccount(acc string) error {
-	err := c.get("/setAccount/address/"+acc, nil)
+func (c *Client) WalletAddAccount(acc string) error {
+	fmt.Println("Inside httpClient.WalletAddAccount")
+	err := c.get("/addAccount/"+acc, nil)
 	return err
 }

@@ -14,3 +14,7 @@ func New() *Wallet {
 func (w *Wallet) SetPrimaryAccount(account string) {
 	w.accountAddress = account
 }
+
+func (w *Wallet) GetPrimaryAccount() string {
+	return w.accountAddress
+}

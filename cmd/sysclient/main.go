@@ -23,6 +23,15 @@ func rentercmd(cmd *cobra.Command, _ []string) {
 
 func hostcmd(cmd *cobra.Command, _ []string) {
 	fmt.Println("This is the host command answered")
+	//resp, err := http.Get("http://localhost:8000/auctionCreate")
+}
+
+func hostregisterToMarketcmd(cmd *cobra.Command, _ []string) {
+	fmt.Println("Registering to market...")
+	err := httpClient.HostRegister()
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func hostfindContractscmd(cmd *cobra.Command, _ []string) {
@@ -55,8 +64,9 @@ func accountaddcmd(cmd *cobra.Command, args []string) {
 		fmt.Println("The address is not a valid ethereum address, try again giving a valid one!!")
 	}
 
-	err := httpClient.WalletSetAccount(args[0])
+	err := httpClient.WalletAddAccount(args[0])
 	if err != nil {
+		//resp, err := http.Get("http://localhost:8000/auctionCreate")
 		fmt.Println("Something went wrong while adding our ethereum account address :", err)
 	} else {
 		fmt.Println("The ethereum account address has been set succesfully")
@@ -90,6 +100,13 @@ var (
 		Short: "Create contracts",
 		Long:  "Create Contracts",
 		Run:   rentercreatecontractscmd,
+	}
+
+	hostRegisterToMarketCmd = &cobra.Command{
+		Use:   "register",
+		Short: "Register to market",
+		Long:  "Connects its ethereum address with its personal ip",
+		Run:   hostregisterToMarketcmd,
 	}
 
 	hostFindContractsCmd = &cobra.Command{

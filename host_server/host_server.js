@@ -100,18 +100,14 @@ app.get('/findAuction', async (req, res)=>{
 	//console.log("To maximum bid einai : ", req.query.maximumBid)
 	let maximumBid = req.query.maximumBid
 	console.log("To bid einai " + maximumBid)
-	let accs = await web3.eth.getAccounts()
+	//let accs = await web3.eth.getAccounts()
+	let acc = req.query.ethereumAddress
 
 	//boolean indicating if a bid was made to an auction
 	var auctionBid = false 
 	//index of our auctionList
 	let position = -1
 
-	//check the auction list if there are any auctions currently available
-//	while (!auctionBid) {
-		//sleep if the auction list was found empty
-	//	await sleep(50)
-		//check the auction list if there are any auctions currently available
 		await lock.acquire('key', await async function(){
 			console.log("lock for traversing auction list acquired")
 			var node = auctionList.head()
@@ -129,7 +125,7 @@ app.get('/findAuction', async (req, res)=>{
 						let auctionAddress = inspectingEvent.returnValues.auctionContract
 						console.log("To auction Address einai ", auctionAddress)
 						let auctionContract = new web3.eth.Contract(auctionjsonContent.abi, auctionAddress)
-						await auctionContract.methods.placeOffer(initialBid - 10).send({from : accs[2], gas : 6700000}, function(error, txHash){	
+						await auctionContract.methods.placeOffer(initialBid - 10).send({from : acc, gas : 6700000}, function(error, txHash){	
 							if (error) {
 								console.log("method place offer could not be called cause of an error")	
 							} else {
@@ -152,7 +148,7 @@ app.get('/findAuction', async (req, res)=>{
 							console.log("Something went wrong while placing the offer, we remove it from the list")
 							node = node.getNext()
 							auctionList.removeAt(position)
-							let data = error.JsonFind(error)
+							let data = JsonFind(error)
 							let reason = data.checkKey('reason')
 							console.log("reason : ", reason)
 
@@ -160,33 +156,6 @@ app.get('/findAuction', async (req, res)=>{
 						.catch(function(err){
 							console.log("There is an error when calling method place Offer")
 						})
-						
-						/*
-						await auctionContract.methods.placeOffer(initialBid - 10).send({from : accs[2], gas : 6700000}, function(error, txHash){	
-						//we found an error, probably the auction window to bid it has closed, so we remove it from our list
-							if (error) {
-								console.log("Something went wrong while placing the offer, we remove it from the list")
-								node = node.getNext()
-								auctionList.removeAt(position)
-								console.log("To error einai : " +  error)
-							} else {
-								console.log("function place offer has been mined with txHash : ", txHash)
-								console.log("I placed an offer to auctionContract : ", auctionAddress)
-								auctionBid = true
-								console.log("Eimai mesa sto method kai to auctionBid einai ", auctionBid)
-								//auctionBid = 42 
-								let duration = parseInt(inspectingEvent.returnValues.duration)
-								//send the auction info  json encoded back to the host 
-								let data = JSON.stringify({address : inspectingEvent.returnValues.auctionContract, taskid : inspectingEvent.returnValues.taskID, 
-								owner : inspectingEvent.returnValues.owner, initialbid : initialBid, duration : duration})
-								res.setHeader('Content-Type', 'application/json');
-								res.send(data)
-								console.log("node is " + node)
-
-							}
-						}).then(function(receipt){
-							console.log(receipt)
-						})*/
 					} else {
 					//we move to the next auction in our list 	
 						node = node.getNext()
@@ -196,9 +165,6 @@ app.get('/findAuction', async (req, res)=>{
 		}, function(err, ret){
 			console.log("lock for traversing auction list released")
 		}, {})			
-	//console.log("auctionBid is ", auctionBid)
-	//console.log("auctionList head is ", auctionList.head().getValue())
-	//}	
 		
 });
 

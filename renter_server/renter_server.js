@@ -125,10 +125,13 @@ auctionFactoryContract.events.StorageAuctionCreated({})
 
 
 app.get('/auctionFinalize', async(req, res)=>{
-	let accs = await web3.eth.getAccounts()
+	//let accs = await web3.eth.getAccounts()
 
-	//get the auction contract address from the url
+	//get the auction contract address from url
 	let auctionAddress = req.query.auctionAddress
+
+	//get ethereum address from url
+	let acc = req.query.ethereumAddress
 
 	//lowest offer is  hardcoded , we need to change it 
 	let lowestOffer = 990
@@ -136,7 +139,7 @@ app.get('/auctionFinalize', async(req, res)=>{
 	let auctionContract = new web3.eth.Contract(auctionjsonContent.abi, auctionAddress)
 
 	//call the finalize method of the auction contract	
-	await auctionContract.methods.finalize().send({from : accs[1], value : lowestOffer, gas : 6700000},function(error, txHash){
+	await auctionContract.methods.finalize().send({from : acc, value : lowestOffer, gas : 6700000},function(error, txHash){
 		if (error) {
 			console.log("method finalize could not be called cause of an error")
 		} else {
@@ -169,7 +172,8 @@ app.get('/auctionFinalize', async(req, res)=>{
 
 app.get('/auctionCreate', async (req,res)=>{	
 	res.setHeader('Content-Type', 'application/json');
-	let accs = await web3.eth.getAccounts(); 
+	//let accs = await web3.eth.getAccounts(); 
+	let acc = req.query.ethereumAddress
 	let events = await testEvent()
 
 	//calculating a random number between 0 - 2^256
@@ -192,7 +196,7 @@ app.get('/auctionCreate', async (req,res)=>{
 	let duration = 120000000000 //duration of the actual file contract 
 
 	//call the createStorage method from the auctionFactory contract
-	await auctionFactoryContract.methods.createStorageAuction(taskID,duration).send({from : accs[1],gas : 6700000}, function(error, txHash) {
+	await auctionFactoryContract.methods.createStorageAuction(taskID,duration).send({from : acc,gas : 6700000}, function(error, txHash) {
 		if (error) {
 			console.log("Egine error : ",txHash)
 

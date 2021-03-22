@@ -35,12 +35,16 @@ func New() *Host {
 	}
 }
 
-func (h *Host) FindContracts() {
+func (h *Host) Register(acc string) {
+
+}
+
+func (h *Host) FindContracts(acc string) {
 	//fmt.Println("vim-go")
 	//desiredMinimumBid := 1000
 	//host must be a server listening to all new storage auctions
 
-	resp, err := http.Get("http://localhost:8001/findAuction?maximumBid=1000")
+	resp, err := http.Get("http://localhost:8001/findAuction?maximumBid=1000&ethereumAddress=" + acc)
 	if err != nil {
 		fmt.Println(err)
 	}

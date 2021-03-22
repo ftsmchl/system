@@ -57,14 +57,16 @@ func (r *Renter) PrintContracts() {
 	r.storageContractsMu.Unlock()
 }
 
-func (r *Renter) AuctionCreate(wg *sync.WaitGroup) {
+//we will account address as an extra argument
+func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 	defer wg.Done()
 
 	var auctionContract AuctionContract
 	var storageContract StorageContract
 
 	//sends an http request and receives an auctionContract without the host
-	resp, err := http.Get("http://localhost:8000/auctionCreate")
+	//resp, err := http.Get("http://localhost:8000/auctionCreate")
+	resp, err := http.Get("http://localhost:8000/auctionCreate?ethereumAddress=" + acc)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -101,7 +103,7 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup) {
 		fmt.Println("I slept for 10 seconds and i am about to finalize the auction with the host")
 
 		//finalize the auction with the winningBidder if there is one
-		resp2, err := http.Get("http://localhost:8000/auctionFinalize?auctionAddress=" + auctionContract.Address)
+		resp2, err := http.Get("http://localhost:8000/auctionFinalize?auctionAddress=" + auctionContract.Address + "&ethereumAddress=" + acc)
 		if err != nil {
 			fmt.Println(err)
 		}
