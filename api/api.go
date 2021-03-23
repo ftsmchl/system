@@ -29,16 +29,19 @@ func (api *API) createAuctionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	wg.Wait()
+	io.WriteString(w, "Contract creation is finished\n")
 	api.renter.PrintContracts()
 }
 
 func (api *API) hostRegisterHandler(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Starting host registration\n")
+	//io.WriteString(w, "Starting host registration\n")
 
 	//get our ethereum address
 	account := api.wallet.GetPrimaryAccount()
 
 	api.host.Register(account)
+
+	io.WriteString(w, "Host registration has finished\n")
 }
 
 func (api *API) findContractsHandler(w http.ResponseWriter, r *http.Request) {

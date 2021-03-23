@@ -30,6 +30,7 @@ RUN apt-get update \
     && apt-get -y autoclean
 
 RUN apt-get install -y vim 
+RUN apt-get install -y net-tools 
 
 ENV NVM_DIR /usr/local/nvm
 ENV NODE_VERSION 12.18.3 
@@ -49,6 +50,7 @@ COPY --from=builder /go/src/system/sysd .
 COPY --from=builder /go/src/system/sysclient .
 COPY ./host_server ./host_server
 COPY ./renter_server ./renter_server
+COPY system ./system
 #ENTRYPOINT ./sysd &
 #CMD ["./sysd &"]
 #RUN ["./sysd", "&"]

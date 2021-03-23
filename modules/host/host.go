@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -36,6 +38,30 @@ func New() *Host {
 }
 
 func (h *Host) Register(acc string) {
+	host, _ := os.Hostname()
+	addrs, _ := net.LookupIP(host)
+
+	var ourIP string
+	for _, addr := range addrs {
+		if ipv4 := addr.To4(); ipv4 != nil {
+			ourIP = ipv4.String()
+			fmt.Println("Our IPV4 is : ", ourIP)
+		}
+	}
+
+	resp, err := http.Get("http://localhost:8001/hostRegister?IP=" + ourIP + "&ethereumAddress=" + acc)
+	if err != nil {
+		fmt.Println("err from httpGet : ", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	text, _ := ioutil.ReadAll(resp.Body)
+	if string(text) == "OK" {
+		fmt.Println("Read OK !!")
+	} else {
+		fmt.Println("We did not read OK!!")
+	}
 
 }
 
