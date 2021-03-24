@@ -12,6 +12,7 @@ var fs = require('fs')
 var express = require('express')
 var app = express();
 
+//initialize auctionFactory contract in order to be able to call methods from it
 var auctionFactoryContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/AuctionFactory.json");
 var auctionFactoryjsonContent = JSON.parse(auctionFactoryContents);
 const auctionFactory = JsonFind(auctionFactoryjsonContent);
@@ -20,10 +21,11 @@ auctionFactoryContract = new web3.eth.Contract(auctionFactoryjsonContent.abi,auc
 var auctionContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/Auction.json");
 var auctionjsonContent = JSON.parse(auctionContents);
 
-var userContents= fs.readFileSync("/home/fotis/truffle-example/build/contracts/User.json");
-var userjsonContent = JSON.parse(userContents);
-const user = JsonFind(userjsonContent)
-userContract = new web3.eth.Contract(userjsonContent.abi, user.checkKey('address'))
+//initialize usersRegistry Contract in order to be able to call methods from it
+var usersRegistryContents= fs.readFileSync("/home/fotis/truffle-example/build/contracts/UsersRegistry.json");
+var usersRegistryjsonContent = JSON.parse(usersRegistryContents);
+const usersRegistry = JsonFind(usersRegistryjsonContent)
+usersRegistryContract = new web3.eth.Contract(usersRegistryjsonContent.abi, usersRegistry.checkKey('address'))
 
 
 
@@ -83,10 +85,15 @@ async function finalizeEvent(auctionContract) {
 		fromBlock : 0,
 		toBlock : 'latest'
 	})
-	await auctionContract.methods.winningBidder().call().then(function(result) {winningBidder = result})
+	await auctionContract.methods.winningBidder().call().then(function(result) {
+		winningBidder = result
+		//res.send(winningBidder)
+	})
 //	await auctionContract.methods.winningBidder().call()
 	console.log("winning Bidder of the contract is ", winningBidder)
-	return event
+	//return event
+	console.log("EVENT FINALIZED : ", event)
+	return winningBidder
 }
 
 
@@ -94,40 +101,51 @@ async function finalizeEvent(auctionContract) {
 app.get('/checkWhoWonAuction', async(req, res)=> {
 	let auctionAddress = req.query.auctionAddress
 	let auctionContract = new web3.eth.Contract(auctionjsonContent.abi, auctionAddress)
-	let event = await finalizeEvent(auctionContract)
-	console.log("EVENT FINALIZED : ", event)
-	res.send("OK")
+	let winningBidder = await finalizeEvent(auctionContract)
+
+	//console.log("EVENT FINALIZED : ", event)
+	
+	//res.send("OK")
+	res.send(winningBidder)
 })
 
 
-app.get('hostRegister', async(req, res)=> {
+app.get('/hostRegister', async(req, res)=> {
 	let ip = req.query.IP
 	let acc = req.query.ethereumAddress
 
-	await userContract.methods.setProviderUrl(ip).send({from : acc, gas : 6700000}, function(errror, txHash){
+	console.log("We are inside host register")
+	console.log("acc is : ", acc)
+	console.log("IP is : ", ip)
+
+
+	await usersRegistryContract.methods.setProviderUrl(ip).send({from : acc, gas : 6700000}, function(error, txHash){
 		console.log("-------------------")
 		if (error) {
 			console.log("method setProviderUrl could not be called cause of an error")
 		} else {
 			console.log("method setProviderUrl has been mined with txHash : ", txHash)
 		}
-		.on('receipt', async function(receipt){
-			console.log("host's IP is registered")
-			res.send("OK")
-		})
-		.on('error', async function(error){
-			console.log("Something went wrong while trying to register host's url")
-			let data = JsonFind(error)
-			let reason = data.checkKey('res')
-			console.log("reason : ", reason)
-			res.send(reason)
-		})
-		.catch(function(err){
-			console.log("caught an error while registering host's IP : ", err)	
-		})
 	})
-
+	.on('receipt', async function(receipt){
+		console.log("host's IP is registered")
+		res.send("OK")
+		console.log("-------------------")
+	})
+	.on('error', async function(error){
+		console.log("Something went wrong while trying to register host's url")
+		let data = JsonFind(error)
+		let reason = data.checkKey('res')
+		console.log("reason : ", reason)
+		res.send(reason)
+		console.log("-------------------")
+	})
+	.catch(function(err){
+		console.log("caught an error while registering host's IP : ", err)	
+	})
 })
+
+
 
 app.get('/findAuction', async (req, res)=>{
 	//res.send("Ok..")

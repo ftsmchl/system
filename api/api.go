@@ -67,7 +67,7 @@ func (api *API) BuildRoutes() {
 	api.Router.HandleFunc("/createAuction", api.createAuctionHandler)
 
 	//host commands
-	api.Router.HandleFunc("hostRegister", api.hostRegisterHandler)
+	api.Router.HandleFunc("/hostRegister", api.hostRegisterHandler)
 	api.Router.HandleFunc("/findContracts", api.findContractsHandler)
 
 	//wallet commands

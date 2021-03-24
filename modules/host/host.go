@@ -107,8 +107,8 @@ func (h *Host) FindContracts(acc string) {
 
 		resp2, _ := http.Get("http://localhost:8001/checkWhoWonAuction?auctionAddress=" + auctionContract.Address)
 		text2, _ := ioutil.ReadAll(resp2.Body)
-		fmt.Println("text2 is ", string(text2))
-		if string(text2) == "OK" {
+		fmt.Println("winningBidder ", string(text2))
+		if string(text2) == acc {
 			fmt.Println("we actually won the auction")
 			//we need lock here
 			storageContract.Address = auctionContract.Address

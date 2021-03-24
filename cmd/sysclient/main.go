@@ -129,7 +129,10 @@ func main() {
 	root.AddCommand(accountAddCmd)
 
 	renterCmd.AddCommand(renterCreateContractsCmd)
+
 	hostCmd.AddCommand(hostFindContractsCmd)
+	hostCmd.AddCommand(hostRegisterToMarketCmd)
+
 	//initialize client
 	root.PersistentFlags().StringVarP(&httpClient.Address, "addr", "a", "localhost:8080", "host/port sysd is listening on ")
 
