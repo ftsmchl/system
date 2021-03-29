@@ -28,9 +28,6 @@ const usersRegistry = JsonFind(usersRegistryjsonContent)
 usersRegistryContract = new web3.eth.Contract(usersRegistryjsonContent.abi, usersRegistry.checkKey('address'))
 
 
-
-console.log("To address einai " + auctionFactory.checkKey('address'))
-
 var express = require('express');
 var app = express();
 
@@ -62,14 +59,12 @@ auctionFactoryContract.events.StorageAuctionCreated({})
 		let duration = parseInt(event.returnValues.duration)
 		Auction = JSON.stringify({address : event.returnValues.auctionContract, taskid : event.returnValues.taskid, 
 		owner : event.returnValues.owner, initialBid : initialBid, duration : duration})
-	//	let auctionAddress = event.returnValues.auctionContract
 		console.log("I heard the event of a storage auction being created")
-		//console.log(event)
 		lock.acquire('key', function(){
-			console.log("lock for inserting auction acquired")
+		//	console.log("lock for inserting auction acquired")
 			auctionList.insertLast(event)	
 		}, function(err, ret){
-			console.log("lock for inserting auction released")
+		//	console.log("lock for inserting auction released")
 		}, {})
 
 
@@ -87,13 +82,14 @@ async function finalizeEvent(auctionContract) {
 	})
 	await auctionContract.methods.winningBidder().call().then(function(result) {
 		winningBidder = result
-		//res.send(winningBidder)
 	})
-//	await auctionContract.methods.winningBidder().call()
 	console.log("winning Bidder of the contract is ", winningBidder)
-	//return event
 	console.log("EVENT FINALIZED : ", event)
-	return winningBidder
+	let dt = JsonFind(event)
+	var address = dt.checkKey('agoraContract')
+	console.log("agoraContract is : " , address)
+
+	return [winningBidder, address]
 }
 
 
@@ -101,12 +97,17 @@ async function finalizeEvent(auctionContract) {
 app.get('/checkWhoWonAuction', async(req, res)=> {
 	let auctionAddress = req.query.auctionAddress
 	let auctionContract = new web3.eth.Contract(auctionjsonContent.abi, auctionAddress)
-	let winningBidder = await finalizeEvent(auctionContract)
+	let result = await finalizeEvent(auctionContract)
 
-	//console.log("EVENT FINALIZED : ", event)
-	
-	//res.send("OK")
-	res.send(winningBidder)
+	var winningBidder = result[0]
+	var contractAddress = result[1]
+
+	console.log("winning bidder : ", winningBidder)
+	console.log("contract Address : ", contractAddress)
+
+	res.setHeader("Content-Type", 'application/json')
+	var answer = JSON.stringify({winningbidder : winningBidder, address : contractAddress})
+	res.send(answer)
 })
 
 

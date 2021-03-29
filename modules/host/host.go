@@ -11,7 +11,8 @@ import (
 )
 
 type Host struct {
-	auctionsBid      map[string]AuctionContract
+	auctionsBid map[string]AuctionContract
+
 	storageContracts map[string]StorageContract
 }
 
@@ -23,6 +24,11 @@ type AuctionContract struct {
 	InitialBid int    `json : "initialbid"`
 }
 
+type Winner struct {
+	WinningBidder string `json : "winningbidder"`
+	Address       string `json : "address"`
+}
+
 type StorageContract struct {
 	Address  string
 	TaskID   string
@@ -32,11 +38,14 @@ type StorageContract struct {
 
 func New() *Host {
 	return &Host{
-		auctionsBid:      make(map[string]AuctionContract),
+		auctionsBid: make(map[string]AuctionContract),
+
+		//[taskID]StorageContract maps a taskID with a StorageContract
 		storageContracts: make(map[string]StorageContract),
 	}
 }
 
+//connects its ethereum account address with its ip to the market
 func (h *Host) Register(acc string) {
 	host, _ := os.Hostname()
 	addrs, _ := net.LookupIP(host)
@@ -77,6 +86,7 @@ func (h *Host) FindContracts(acc string) {
 
 	var auctionContract AuctionContract
 	var storageContract StorageContract
+	var winner Winner
 
 	defer resp.Body.Close()
 	text, _ := ioutil.ReadAll(resp.Body)
@@ -105,22 +115,32 @@ func (h *Host) FindContracts(acc string) {
 		time.Sleep(15 * time.Second)
 		fmt.Println("I slept for 15 seconds and i am gonna see who won the auction")
 
+		//check if we actually won then auction
 		resp2, _ := http.Get("http://localhost:8001/checkWhoWonAuction?auctionAddress=" + auctionContract.Address)
 		text2, _ := ioutil.ReadAll(resp2.Body)
-		fmt.Println("winningBidder ", string(text2))
-		if string(text2) == acc {
+		json.Unmarshal([]byte(text2), &winner)
+
+		if winner.WinningBidder == acc && winner.Address != "" {
 			fmt.Println("we actually won the auction")
 			//we need lock here
-			storageContract.Address = auctionContract.Address
+			storageContract.Address = winner.Address
 			storageContract.TaskID = auctionContract.TaskID
 			storageContract.Owner = auctionContract.Owner
 			storageContract.Duration = auctionContract.Duration
 
 			h.storageContracts[auctionContract.TaskID] = storageContract
+			fmt.Println("----------------")
+			fmt.Println("Contract Address : ", h.storageContracts[auctionContract.TaskID].Address)
+			fmt.Println("Duration : ", h.storageContracts[auctionContract.TaskID].Duration)
+			fmt.Println("Owner : ", h.storageContracts[auctionContract.TaskID].Owner)
+			fmt.Println("TaskID : ", h.storageContracts[auctionContract.TaskID].TaskID)
+			fmt.Println("----------------")
 
 		} else {
 			fmt.Println("we did not win the auction!!!")
 		}
 	}
+
+	//we are going to activate our StorageContract
 
 }

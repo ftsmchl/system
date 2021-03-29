@@ -13,6 +13,7 @@ type Renter struct {
 	auctionContracts   map[string]AuctionContract
 	auctionContractsMu sync.Mutex
 
+	//[taskID]StorageContract
 	storageContracts   map[string]StorageContract
 	storageContractsMu sync.Mutex
 }
@@ -31,6 +32,11 @@ type StorageContract struct {
 	TaskID   string
 	Duration int //(ms)
 	Host     string
+}
+
+type FinalAuction struct {
+	WinningBidder string `json : "winningBidder"`
+	Address       string `json : "address"`
 }
 
 type AuctionContract struct {
@@ -64,8 +70,9 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 	var auctionContract AuctionContract
 	var storageContract StorageContract
 
+	var winner FinalAuction
+
 	//sends an http request and receives an auctionContract without the host
-	//resp, err := http.Get("http://localhost:8000/auctionCreate")
 	resp, err := http.Get("http://localhost:8000/auctionCreate?ethereumAddress=" + acc)
 	if err != nil {
 		fmt.Println(err)
@@ -76,8 +83,6 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 	text, err := ioutil.ReadAll(resp.Body)
 	json.Unmarshal([]byte(text), &auctionContract)
 
-	//r.auctionContracts = append(r.auctionContracts, auctionContract)
-	//we need lock
 	r.auctionContractsMu.Lock()
 	r.auctionContracts[auctionContract.TaskID] = auctionContract
 	r.auctionContractsMu.Unlock()
@@ -110,18 +115,15 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 		defer resp2.Body.Close()
 
 		text2, err := ioutil.ReadAll(resp2.Body)
-		//fmt.Println("O winningBidder tou auction to opoio molis egine finalized einai  : ", string(text2))
+		json.Unmarshal([]byte(text2), &winner)
 
 		//we need to check if text2 size is a valid ethereum account address
-		fmt.Println("Size of ethereum address is : ", len(text2))
-
-		//if len(text2) == 42 we have an auction winner
-		if len(text2) == 42 {
-			fmt.Println("O winningBidder tou auction to opoio molis egine finalized einai  : ", string(text2))
-			storageContract.Address = auctionContract.Address
+		if len(winner.WinningBidder) == 42 && winner.Address != "" {
+			fmt.Println("O winningBidder tou auction to opoio molis egine finalized einai  : ", winner.WinningBidder)
+			storageContract.Address = winner.Address
 			storageContract.TaskID = auctionContract.TaskID
 			storageContract.Duration = auctionContract.Duration
-			storageContract.Host = string(text2)
+			storageContract.Host = string(winner.WinningBidder)
 
 			r.storageContractsMu.Lock()
 			r.storageContracts[storageContract.TaskID] = storageContract

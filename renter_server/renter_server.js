@@ -125,7 +125,6 @@ auctionFactoryContract.events.StorageAuctionCreated({})
 
 
 app.get('/auctionFinalize', async(req, res)=>{
-	//let accs = await web3.eth.getAccounts()
 
 	//get the auction contract address from url
 	let auctionAddress = req.query.auctionAddress
@@ -152,11 +151,11 @@ app.get('/auctionFinalize', async(req, res)=>{
 
 		//check from contract who won the auction
 		await auctionContract.methods.winningBidder().call().then(function(result){
-			console.log("winning Bidder : ", result)
-			res.send(result)
+			var answer = JSON.stringify({winningBidder : result, address : agoraContractAddress})
+			res.setHeader('Content-Type', 'application/json');
+			res.send(answer)
 		})
 
-		console.log("AgoraContract address is : ", agoraContractAddress)
 	})
 	.on('error', function(error){
 		let data = JsonFind(error.data)
