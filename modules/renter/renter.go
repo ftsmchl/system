@@ -16,6 +16,9 @@ type Renter struct {
 	//[taskID]StorageContract
 	storageContracts   map[string]StorageContract
 	storageContractsMu sync.Mutex
+
+	//[publicKey]IPV4
+	hosts map[string]string
 }
 
 //constructor of renter module
@@ -23,6 +26,7 @@ func New() *Renter {
 	renter := &Renter{
 		auctionContracts: make(map[string]AuctionContract),
 		storageContracts: make(map[string]StorageContract),
+		hosts:            make(map[string]string),
 	}
 	return renter
 }

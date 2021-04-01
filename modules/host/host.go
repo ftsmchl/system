@@ -129,6 +129,7 @@ func (h *Host) FindContracts(acc string) {
 			storageContract.Duration = auctionContract.Duration
 
 			h.storageContracts[auctionContract.TaskID] = storageContract
+			fmt.Println("Our storage Contract")
 			fmt.Println("----------------")
 			fmt.Println("Contract Address : ", h.storageContracts[auctionContract.TaskID].Address)
 			fmt.Println("Duration : ", h.storageContracts[auctionContract.TaskID].Duration)
@@ -142,5 +143,14 @@ func (h *Host) FindContracts(acc string) {
 	}
 
 	//we are going to activate our StorageContract
+
+	resp3, _ := http.Get("http://localhost:8001/activateContract?contractAddress=" + storageContract.Address + "&ethereumAddress=" + acc)
+	text3, _ := ioutil.ReadAll(resp3.Body)
+
+	if string(text3) == "OK" {
+		fmt.Println("storage contract activated by us !!")
+	} else {
+		fmt.Println("Something went wrong while activating the storage contract")
+	}
 
 }

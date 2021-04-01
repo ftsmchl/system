@@ -18,8 +18,13 @@ var auctionFactoryjsonContent = JSON.parse(auctionFactoryContents);
 const auctionFactory = JsonFind(auctionFactoryjsonContent);
 auctionFactoryContract = new web3.eth.Contract(auctionFactoryjsonContent.abi,auctionFactory.checkKey('address'));
 
+//initialize auction contract in order to be able to call methods from it
 var auctionContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/Auction.json");
 var auctionjsonContent = JSON.parse(auctionContents);
+
+//initialize storage contract in order to be able to call methods from it
+var storageContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/StorageAgreement.json")
+var storagejsonContent = JSON.parse(storageContents)
 
 //initialize usersRegistry Contract in order to be able to call methods from it
 var usersRegistryContents= fs.readFileSync("/home/fotis/truffle-example/build/contracts/UsersRegistry.json");
@@ -146,7 +151,35 @@ app.get('/hostRegister', async(req, res)=> {
 	})
 })
 
+app.get('/activateContract', async (req, res) => {
+	let storageAddress = req.query.contractAddress
+	let acc = req.query.ethereumAddress
 
+	let storageContract = new web3.eth.Contract(storagejsonContent.abi, storageAddress)
+	let collateral = 1000 
+
+	await storageContract.methods.activate().send({from : acc, value : collateral, gas : 6700000}, function(error, txHash){
+		if (error) {
+			console.log("method activate could not be called cause of an error")
+		}else{
+			console.log("method activate has been mined with txHash : ", txHash)
+		}
+	})
+	.on('receipt', async function(receipt){
+		console.log("receipt ", receipt)
+
+	})
+	.on('error', async function(error){
+		let data = JsonFind(error.data)
+		let reason = data.checkKey('reason')
+		console.log("reason : ", reason)
+		res.send("no OK")
+	})
+	.catch(function(err){
+		console.log("There is an error when calling method activate")
+	})
+
+})
 
 app.get('/findAuction', async (req, res)=>{
 	//res.send("Ok..")
