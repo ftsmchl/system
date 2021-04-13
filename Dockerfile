@@ -46,11 +46,17 @@ ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 RUN node -v
 RUN npm -v
 RUN npm install web3
+RUN mkdir logs
 COPY --from=builder /go/src/system/sysd . 
 COPY --from=builder /go/src/system/sysclient .
+#COPY --from=builder /go/src/system/start_renter.sh .
+#COPY --from=builder /go/src/system/start_host.sh .
+COPY --from=builder /go/src/system/start_node.sh .
+COPY --from=builder /go/src/system/test_start_node.sh .
+COPY --from=builder /go/src/system/test_start_node_2.sh .
+COPY --from=builder /go/src/system/test_start_node_3.sh .
 COPY ./host_server ./host_server
 COPY ./renter_server ./renter_server
-COPY system ./system
-#ENTRYPOINT ./sysd &
+ENTRYPOINT ./test_start_node_3.sh 
 #CMD ["./sysd &"]
 #RUN ["./sysd", "&"]

@@ -23,7 +23,7 @@ func (api *API) createAuctionHandler(w http.ResponseWriter, r *http.Request) {
 
 	var wg sync.WaitGroup
 	//we are creating 2 contracts
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 6; i++ {
 		wg.Add(1)
 		go api.renter.AuctionCreate(&wg, account)
 	}

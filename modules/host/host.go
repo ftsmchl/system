@@ -112,8 +112,10 @@ func (h *Host) FindContracts(acc string) {
 		fmt.Println("Duration(ms) : ", auctionContract.Duration)
 		fmt.Println("----------------")
 
-		time.Sleep(15 * time.Second)
-		fmt.Println("I slept for 15 seconds and i am gonna see who won the auction")
+		//time.Sleep(15 * time.Second)
+		//fmt.Println("I slept for 15 seconds and i am gonna see who won the auction")
+		time.Sleep(65 * time.Second)
+		fmt.Println("I slept for 65 seconds and i am gonna see who won the auction")
 
 		//check if we actually won then auction
 		resp2, _ := http.Get("http://localhost:8001/checkWhoWonAuction?auctionAddress=" + auctionContract.Address)

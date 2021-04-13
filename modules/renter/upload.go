@@ -7,6 +7,7 @@ import (
 
 func (r *Renter) Upload(source string) {
 
+	//Check if the file is a directory
 	sourceInfo, err := os.Stat(source)
 
 	if err != nil {
@@ -19,4 +20,10 @@ func (r *Renter) Upload(source string) {
 		return
 	}
 
+	//Check for read access
+	file, err := os.Open(source)
+	if err != nil {
+		fmt.Println("somethig gone wrong while opening the file : ", err)
+	}
+	file.Close()
 }

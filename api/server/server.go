@@ -50,7 +50,7 @@ func New() (*Server, error) {
 	//Create the routes of our handlers
 	api.BuildRoutes()
 
-	listener, err := net.Listen("tcp", "0.0.0.0:8080")
+	listener, err := net.Listen("tcp", "127.0.0.1:8080")
 	if err != nil {
 		return nil, err
 	}

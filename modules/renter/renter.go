@@ -55,14 +55,18 @@ type AuctionContract struct {
 func (r *Renter) PrintContracts() {
 	fmt.Println("Storage Contracts")
 	r.storageContractsMu.Lock()
+	counter := 1
 	for _, value := range r.storageContracts {
 		fmt.Println("---------------------")
+		fmt.Println("STORAGE CONTRACT No : ", counter)
 		fmt.Println("TaskID : ", value.TaskID)
 		fmt.Println("Contract Address : ", value.Address)
 		fmt.Println("Duration(ms) : ", value.Duration)
 		fmt.Println("Host : ", value.Host)
 		fmt.Println("---------------------")
 		fmt.Println("")
+		fmt.Println("")
+		counter++
 	}
 	r.storageContractsMu.Unlock()
 }
@@ -76,12 +80,14 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 
 	var winner FinalAuction
 
+	fmt.Println("I am inside r.AuctionCreate()")
 	//sends an http request and receives an auctionContract without the host
 	resp, err := http.Get("http://localhost:8000/auctionCreate?ethereumAddress=" + acc)
 	if err != nil {
 		fmt.Println(err)
 	}
 
+	//fmt.Println("Phra to gamhmeno mhnuma")
 	defer resp.Body.Close()
 
 	text, err := ioutil.ReadAll(resp.Body)
@@ -108,8 +114,8 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 		fmt.Println("WinningBidder(host) : ", auctionContract.Host)
 
 		//sleep until the auction is finished
-		time.Sleep(10 * time.Second)
-		fmt.Println("I slept for 10 seconds and i am about to finalize the auction with the host")
+		time.Sleep(60 * time.Second)
+		fmt.Println("I slept for 60 seconds and i am about to finalize the auction with the host")
 
 		//finalize the auction with the winningBidder if there is one
 		resp2, err := http.Get("http://localhost:8000/auctionFinalize?auctionAddress=" + auctionContract.Address + "&ethereumAddress=" + acc)

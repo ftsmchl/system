@@ -64,7 +64,7 @@ auctionFactoryContract.events.StorageAuctionCreated({})
 		let duration = parseInt(event.returnValues.duration)
 		Auction = JSON.stringify({address : event.returnValues.auctionContract, taskid : event.returnValues.taskid, 
 		owner : event.returnValues.owner, initialBid : initialBid, duration : duration})
-		console.log("I heard the event of a storage auction being created")
+		console.log("I heard the event of a storage auction being created : " + event.returnValues.auctionContract)
 		lock.acquire('key', function(){
 		//	console.log("lock for inserting auction acquired")
 			auctionList.insertLast(event)	
@@ -167,6 +167,7 @@ app.get('/activateContract', async (req, res) => {
 	})
 	.on('receipt', async function(receipt){
 		console.log("receipt ", receipt)
+		res.send("OK")
 
 	})
 	.on('error', async function(error){
@@ -194,6 +195,8 @@ app.get('/findAuction', async (req, res)=>{
 	//index of our auctionList
 	let position = -1
 
+	var error = false
+
 	await lock.acquire('key', await async function(){
 		//console.log("lock for traversing auction list acquired")
 		var node = auctionList.head()
@@ -202,7 +205,7 @@ app.get('/findAuction', async (req, res)=>{
 		} else {
 			//try to find an auction to bid by searching the list until we reach the final node or an auction was found
 			while (node != null && !auctionBid) {
-				position ++
+				//position ++
 				let inspectingEvent = node.getValue()	
 				let initialBid = parseInt(inspectingEvent.returnValues.initialBid)
 				//check if this auction fills our requirements
@@ -215,6 +218,7 @@ app.get('/findAuction', async (req, res)=>{
 					await auctionContract.methods.placeOffer(initialBid - 10).send({from : acc, gas : 6700000}, function(error, txHash){	
 						if (error) {
 							console.log("method place offer could not be called cause of an error")	
+							error = true
 						} else {
 							console.log("method place offer has been mined with txHash : ", txHash)		
 						}
@@ -234,20 +238,36 @@ app.get('/findAuction', async (req, res)=>{
 						})
 					.on('error', async function(error){
 						console.log("Something went wrong while placing the offer, we remove it from the list")
-						node = node.getNext()
-						auctionList.removeAt(position)
+						//node = node.getNext()
+						error = true
+						//auctionList.removeAt(position)
 						let data = JsonFind(error)
 						let reason = data.checkKey('reason')
 						console.log("reason : ", reason)
 
 					})
 					.catch(function(err){
+					//	node = node.getNext()
+						error = true
 						console.log("There is an error when calling method place Offer")
 						console.log("---------------------------")
 					})
+					if (error == true){
+						console.log("OP eimai sto error p 8 paw sto node.next()")
+						console.log("To error einai : " + error)
+						node = node.getNext()
+						//auctionList.removeAt(position)
+						auctionList.removeAt(0)
+						error = false
+					}else{
+						
+					}
 				} else {
 					//we move to the next auction in our list 	
+					console.log("De 8a eprepe n eimai pote edw gamw to spiti mou")
 					node = node.getNext()
+					//auctionList.removeAt(position)
+					auctionList.removeAt(0)
 				}
 			}
 		}	
