@@ -19,6 +19,9 @@ type Renter struct {
 
 	//[publicKey]IPV4
 	hosts map[string]string
+
+	//List of workers for uploading/downloading
+	workers map[string]*worker //[taskID] *worker
 }
 
 //constructor of renter module

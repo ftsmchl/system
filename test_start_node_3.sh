@@ -17,6 +17,8 @@ case $HOSTNAME in
 		./sysclient accountAdd  0xD7A7F523A228950eA91a328aC6d1AbF01e985802 >> logs/sysclient.out &
 		sleep 17 
 		./sysclient host findContracts &
+		sleep 65
+		./sysclient host register >> logs/sysclient.out
 		;;
 	(system_host_2)
 		node host_server/host_server.js >> logs/host_server.out &
