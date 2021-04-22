@@ -31,4 +31,6 @@ func (r *Renter) updateWorkerPool() {
 		}
 	}
 	r.storageContractsMu.Unlock()
+	//we need to remove any worker that is connected with a contract that is no longer
+	//live
 }

@@ -1,9 +1,13 @@
-package renter
+package modules
 
 import (
 	"fmt"
 
 	"github.com/klauspost/reedsolomon"
+)
+
+const (
+	SectorSize = 90 //bytes
 )
 
 //RSCode is a ReedSolomon encoder/decoder

@@ -3,6 +3,7 @@ package renter
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ftsmchl/system/modules/renter/renterfile"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -22,6 +23,11 @@ type Renter struct {
 
 	//List of workers for uploading/downloading
 	workers map[string]*worker //[taskID] *worker
+
+	//
+	renterFile *renterfile.Renterfile
+
+	mu sync.Mutex
 }
 
 //constructor of renter module
@@ -30,6 +36,7 @@ func New() *Renter {
 		auctionContracts: make(map[string]AuctionContract),
 		storageContracts: make(map[string]StorageContract),
 		hosts:            make(map[string]string),
+		workers:          make(map[string]*worker),
 	}
 	return renter
 }
@@ -72,6 +79,7 @@ func (r *Renter) PrintContracts() {
 		counter++
 	}
 	r.storageContractsMu.Unlock()
+	r.updateWorkerPool()
 }
 
 //we will account address as an extra argument
