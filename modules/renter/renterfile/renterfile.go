@@ -1,6 +1,7 @@
 package renterfile
 
 import (
+	"fmt"
 	"github.com/ftsmchl/system/modules"
 	"os"
 	"sync"
@@ -46,6 +47,14 @@ type HostPublicKey struct {
 	Used      bool
 }
 
+func (rf *Renterfile) PieceSize() uint64 {
+	return rf.pieceSize
+}
+
+func (rf *Renterfile) LocalPath() string {
+	return rf.localPath
+}
+
 func (rf *Renterfile) ErasureCode() *modules.RSSubCode {
 	return rf.erasureCode
 }
@@ -75,8 +84,13 @@ func New(source string, erasureCode *modules.RSSubCode, fileSize uint64, fileMod
 	if fileSize%file.ChunkSize() != 0 || numChunks == 0 {
 		numChunks++
 	}
+	fmt.Println("-------------------")
+	fmt.Println("File size is : ", fileSize)
+	fmt.Println("Num Pieces are : ", erasureCode.NumPieces())
+	fmt.Println("We Have created chunks : ", numChunks)
+	fmt.Println("-------------------")
 
-	file.chunks = make([]chunk, erasureCode.NumPieces())
+	file.chunks = make([]chunk, numChunks)
 
 	for i := range file.chunks {
 		file.chunks[i].Pieces = make([][]piece, erasureCode.NumPieces())

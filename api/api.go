@@ -33,6 +33,17 @@ func (api *API) createAuctionHandler(w http.ResponseWriter, r *http.Request) {
 	api.renter.PrintContracts()
 }
 
+func (api *API) uploadFileHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	pathTrimmed := params["path"]
+	err := api.renter.Upload(pathTrimmed)
+	if err != nil {
+		fmt.Fprintf(w, "There was an error uploading the file : %s", err)
+	} else {
+		io.WriteString(w, "File uploaded succesfully bruh...")
+	}
+}
+
 func (api *API) hostRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	//io.WriteString(w, "Starting host registration\n")
 
@@ -65,6 +76,7 @@ func (api *API) BuildRoutes() {
 	//renter commands
 	api.Router.HandleFunc("/score", api.scoreHandler)
 	api.Router.HandleFunc("/createAuction", api.createAuctionHandler)
+	api.Router.HandleFunc("/uploadFile/{path}", api.uploadFileHandler)
 
 	//host commands
 	api.Router.HandleFunc("/hostRegister", api.hostRegisterHandler)

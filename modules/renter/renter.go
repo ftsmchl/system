@@ -27,6 +27,8 @@ type Renter struct {
 	//
 	renterFile *renterfile.Renterfile
 
+	uploadHeap uploadHeap
+
 	mu sync.Mutex
 }
 
@@ -37,7 +39,13 @@ func New() *Renter {
 		storageContracts: make(map[string]StorageContract),
 		hosts:            make(map[string]string),
 		workers:          make(map[string]*worker),
+
+		uploadHeap: uploadHeap{
+			newUploads: make(chan struct{}, 1),
+		},
 	}
+
+	go renter.threadedUpload()
 	return renter
 }
 

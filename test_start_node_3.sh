@@ -9,6 +9,8 @@ case $HOSTNAME in
 		./sysclient accountAdd 0x11C593FF9D7fa0741645Cf60Ff0A67cA36BB9d2b >> logs/sysclient.out &
 		sleep 9 
 		./sysclient renter createContracts >> logs/sysclient.out
+		sleep 65
+		./sysclient renter uploadFile skata >> logs/sysclient.out 
 		;;
 	
 	(system_host_1) 
@@ -17,8 +19,8 @@ case $HOSTNAME in
 		./sysclient accountAdd  0xD7A7F523A228950eA91a328aC6d1AbF01e985802 >> logs/sysclient.out &
 		sleep 17 
 		./sysclient host findContracts &
-		sleep 65
-		./sysclient host register >> logs/sysclient.out
+		#sleep 65
+		#./sysclient host register >> logs/sysclient.out
 		;;
 	(system_host_2)
 		node host_server/host_server.js >> logs/host_server.out &

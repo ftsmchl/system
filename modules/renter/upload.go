@@ -9,6 +9,8 @@ import (
 
 func (r *Renter) Upload(source string) error {
 
+	//source := "/" + pathTrim
+
 	//Check if the file is a directory
 	sourceInfo, err := os.Stat(source)
 
@@ -52,6 +54,9 @@ func (r *Renter) Upload(source string) error {
 
 	r.buildAndPushChunks(rentfile)
 
-	fmt.Println(rentfile)
+	//fmt.Println(rentfile)
+
+	r.uploadHeap.newUploads <- struct{}{}
+
 	return nil
 }

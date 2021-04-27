@@ -6,6 +6,7 @@ import (
 	"github.com/ftsmchl/system/helper"
 	"github.com/spf13/cobra"
 	"os"
+	//"strings"
 )
 
 var (
@@ -52,6 +53,18 @@ func rentercreatecontractscmd(cmd *cobra.Command, _ []string) {
 		return
 	}
 	fmt.Println("Creating contracts operation has finished")
+}
+
+func renteruploadfilecmd(cmd *cobra.Command, args []string) {
+	fmt.Println("Preparing to upload ", args[0])
+	//pathTrimmed := strings.TrimPrefix(args[0], "/")
+	err := httpClient.RenterUploadFile(args[0])
+	if err != nil {
+		fmt.Println("file was not uploaded succesfully .. ", err)
+	} else {
+		fmt.Println("file was uploaded succesfully.. ")
+	}
+
 }
 
 func accountaddcmd(cmd *cobra.Command, args []string) {
@@ -102,10 +115,17 @@ var (
 		Run:   rentercreatecontractscmd,
 	}
 
+	renterUploadFileCmd = &cobra.Command{
+		Use:   "uploadFile",
+		Short: "upload a file",
+		Long:  "upload a file using erasure coding",
+		Run:   renteruploadfilecmd,
+	}
+
 	hostRegisterToMarketCmd = &cobra.Command{
 		Use:   "register",
 		Short: "Register to market",
-		Long:  "Connects its ethereum address with its personal ip",
+		Long:  "Connects its ethereum address(public Key) with its personal ip",
 		Run:   hostregisterToMarketcmd,
 	}
 
@@ -129,6 +149,7 @@ func main() {
 	root.AddCommand(accountAddCmd)
 
 	renterCmd.AddCommand(renterCreateContractsCmd)
+	renterCmd.AddCommand(renterUploadFileCmd)
 
 	hostCmd.AddCommand(hostFindContractsCmd)
 	hostCmd.AddCommand(hostRegisterToMarketCmd)

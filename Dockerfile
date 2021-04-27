@@ -49,6 +49,7 @@ RUN npm install web3
 RUN mkdir logs
 COPY --from=builder /go/src/system/sysd . 
 COPY --from=builder /go/src/system/sysclient .
+COPY --from=builder /go/src/system/skata .
 #COPY --from=builder /go/src/system/start_renter.sh .
 #COPY --from=builder /go/src/system/start_host.sh .
 COPY --from=builder /go/src/system/start_node.sh .
