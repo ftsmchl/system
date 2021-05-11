@@ -14,6 +14,9 @@ type Host struct {
 	auctionsBid map[string]AuctionContract
 
 	storageContracts map[string]StorageContract
+
+	//mu sync.Mutex
+	listener net.Listener
 }
 
 type AuctionContract struct {
@@ -37,12 +40,19 @@ type StorageContract struct {
 }
 
 func New() *Host {
-	return &Host{
+	h := &Host{
 		auctionsBid: make(map[string]AuctionContract),
 
 		//[taskID]StorageContract maps a taskID with a StorageContract
 		storageContracts: make(map[string]StorageContract),
 	}
+
+	err := h.initNetworking("0.0.0.0:8087")
+	if err != nil {
+		fmt.Println("init networking could not be initiated properly")
+	}
+
+	return h
 }
 
 //connects its ethereum account address with its ip to the market

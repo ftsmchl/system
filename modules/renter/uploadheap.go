@@ -112,7 +112,7 @@ func (r *Renter) threadedUpload() {
 		//wait for an upload to be signaled
 		select {
 		case <-r.uploadHeap.newUploads:
-			fmt.Println("Signal caught that we have chunks for uploading")
+			fmt.Println("[UploadHeap] : Signal caught that we have chunks for uploading")
 			//	err := r.repairLoop()
 		}
 

@@ -64,7 +64,7 @@ esac
 while sleep 60;do
 	ps aux | grep sysd | grep -q -v grep
 	STATUS_1=$?
-	ps auz | grep node | grep -q -v grep
+	ps aux | grep node | grep -q -v grep
 	STATUS_2=$?
 	if [$STATUS_1 -ne 0 -o $STATUS_2 -ne 0]; then
 		exit 1

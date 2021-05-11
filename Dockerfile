@@ -56,6 +56,7 @@ COPY --from=builder /go/src/system/start_node.sh .
 COPY --from=builder /go/src/system/test_start_node.sh .
 COPY --from=builder /go/src/system/test_start_node_2.sh .
 COPY --from=builder /go/src/system/test_start_node_3.sh .
+COPY --from=builder /go/src/system/test_start_node_register_ips.sh .
 COPY ./host_server ./host_server
 COPY ./renter_server ./renter_server
 ENTRYPOINT ./test_start_node_3.sh 

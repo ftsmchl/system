@@ -12,6 +12,8 @@ type worker struct {
 
 	contract StorageContract
 
+	renter *Renter
+
 	//Upload variables
 	uploadChan chan struct{}
 
@@ -32,6 +34,7 @@ func (r *Renter) updateWorkerPool() {
 			worker := &worker{
 				contract:   contract,
 				uploadChan: make(chan struct{}, 1),
+				renter:     r,
 			}
 			r.workers[taskID] = worker
 
@@ -51,7 +54,11 @@ func (w *worker) threadedWorkLoop() {
 	for {
 		select {
 		case <-w.uploadChan:
-			fmt.Println("I received a signal in my uploadChan")
+			fmt.Println("I received a signal in my uploadChan, taskID = ", w.contract.TaskID)
+			chunk, pieceIndex := w.nextUploadChunk()
+			fmt.Println("uc.index = ", chunk.index, "pieceIndex : ", pieceIndex)
+			w.upload(chunk, pieceIndex)
+
 		}
 	}
 }

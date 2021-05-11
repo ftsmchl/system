@@ -15,7 +15,7 @@ func NewBuffer(length, pieceSize uint64) destinationBuffer {
 	}
 
 	db := destinationBuffer{
-		buf:       make([][]byte, length/pieceSize),
+		buf:       make([][]byte, 0, length/pieceSize),
 		pieceSize: pieceSize,
 	}
 

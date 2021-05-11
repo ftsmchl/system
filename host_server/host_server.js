@@ -1,5 +1,6 @@
 var Web3 = require('web3');
-var provider = 'ws://192.168.1.4:7545';
+//var provider = 'ws://192.168.1.4:7545';
+var provider = 'ws://192.168.0.147:7545';
 
 const JsonFind = require('json-find');
 //sleep 

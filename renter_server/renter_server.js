@@ -1,5 +1,6 @@
 var Web3 = require('web3');
-var provider = 'ws://192.168.1.4:7545';
+//var provider = 'ws://192.168.1.4:7545';
+var provider = 'ws://192.168.0.147:7545';
 
 const JsonFind = require('json-find')
 
@@ -48,6 +49,14 @@ const auctionFactory = JsonFind(auctionFactoryjsonContent)
 contract = new web3.eth.Contract(jsonContent.abi, tryecdsa2.checkKey('address'));
 auctionFactoryContract = new web3.eth.Contract(auctionFactoryjsonContent.abi,auctionFactory.checkKey('address'));
 
+//initialize usersRegistry Contract in order to be able to call methods from it
+var usersRegistryContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/UsersRegistry.json");
+var usersRegistryjsonContent = JSON.parse(usersRegistryContents);
+const usersRegistry = JsonFind(usersRegistryjsonContent)
+usersRegistryContract = new web3.eth.Contract(usersRegistryjsonContent.abi, usersRegistry.checkKey('address'))
+
+
+
 console.log("To address einai " + auctionFactory.checkKey('address'))
 async function testEvent() {
 	let events  = await contract.getPastEvents('test',
@@ -74,6 +83,23 @@ app.get('/showAllOffers', async (req, res) => {
 
 })
 
+//check provider's IP from usersRegistry Contract method
+app.get('/providerIP', async(req,res) => {
+	let providerPK = req.query.publicKey
+
+	console.log("We are inside provider IP route")
+	console.log("provider's PK is : ", providerPK)
+
+	await usersRegistryContract.methods.getProviderUrl(providerPK).call(function(err, result) {
+		if (err){
+			console.log("An error occured, ", err)
+			res.send("!OK")
+		} else {
+			console.log("IP of the given provider is : ", result)
+			res.send(result)
+		}
+	})
+})
 
 app.get('/pastEvents',async (req,res)=>{
 	res.setHeader('Content-Type', 'application/json');

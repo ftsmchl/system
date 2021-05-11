@@ -18,6 +18,9 @@ type Renter struct {
 	storageContracts   map[string]StorageContract
 	storageContractsMu sync.Mutex
 
+	//editors map[taskID]Editor
+	editors map[string]*Editor
+
 	//[publicKey]IPV4
 	hosts map[string]string
 
@@ -39,6 +42,7 @@ func New() *Renter {
 		storageContracts: make(map[string]StorageContract),
 		hosts:            make(map[string]string),
 		workers:          make(map[string]*worker),
+		editors:          make(map[string]*Editor),
 
 		uploadHeap: uploadHeap{
 			newUploads: make(chan struct{}, 1),
@@ -54,6 +58,7 @@ type StorageContract struct {
 	TaskID   string
 	Duration int //(ms)
 	Host     string
+	IP       string
 }
 
 type FinalAuction struct {
@@ -81,6 +86,7 @@ func (r *Renter) PrintContracts() {
 		fmt.Println("Contract Address : ", value.Address)
 		fmt.Println("Duration(ms) : ", value.Duration)
 		fmt.Println("Host : ", value.Host)
+		fmt.Println("Host's IP : ", value.IP)
 		fmt.Println("---------------------")
 		fmt.Println("")
 		fmt.Println("")
@@ -154,9 +160,11 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 			storageContract.Duration = auctionContract.Duration
 			storageContract.Host = string(winner.WinningBidder)
 
-			r.storageContractsMu.Lock()
-			r.storageContracts[storageContract.TaskID] = storageContract
-			r.storageContractsMu.Unlock()
+			/*
+				r.storageContractsMu.Lock()
+				r.storageContracts[storageContract.TaskID] = storageContract
+				r.storageContractsMu.Unlock()
+			*/
 		} else {
 			fmt.Println("There is not a winning bidder for our auction")
 		}
@@ -165,5 +173,22 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 		fmt.Println("Something went wrong while creating the auctionContract")
 		fmt.Println("text that was read from renterServer is ", string(text))
 	}
+
+	resp3, err := http.Get("http://localhost:8000/providerIP?publicKey=" + storageContract.Host)
+	if err != nil {
+		fmt.Println("Error in providerIP GET : ", err)
+	}
+	defer resp3.Body.Close()
+
+	text3, err := ioutil.ReadAll(resp3.Body)
+	if string(text3) == "!OK" {
+		fmt.Println("We could not read the ip of our provider properly")
+	} else {
+		storageContract.IP = string(text3)
+	}
+
+	r.storageContractsMu.Lock()
+	r.storageContracts[storageContract.TaskID] = storageContract
+	r.storageContractsMu.Unlock()
 
 }
