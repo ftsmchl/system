@@ -59,19 +59,25 @@ func (w *worker) processUploadChunk(uc *unfinishedUploadChunk) (nextChunk *unfin
 //will perform some upload work
 func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 	fmt.Println("I am currently a worker in upload")
-	w.mu.Lock()
+	//w.mu.Lock()
 	taskID := w.contract.TaskID
 
 	//open an editing connection to the host
 	e, err := w.renter.Editor(taskID)
+
+	defer e.close()
 	if err != nil {
 		fmt.Println("Something went wrong from calling Editor() : ", err)
 		w.mu.Unlock()
 		return
 	}
 
+	//upload pieceIndex to host
+	e.upload(uc.physicalChunkData[pieceIndex])
+
 	w.renter.editors[taskID] = e
-	w.mu.Unlock()
+	//w.mu.Unlock()
+
 	return
 
 }

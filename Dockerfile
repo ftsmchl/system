@@ -9,8 +9,8 @@ RUN go mod download
 COPY . .
 
 #RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o sysd .
-RUN CGO_ENABLED=0 GOOS=linux go build -o . ./cmd/sysd
-RUN CGO_ENABLED=0 GOOS=linux go build -o . ./cmd/sysclient
+RUN CGO_ENABLED=1 GOOS=linux go build -o . ./cmd/sysd
+RUN CGO_ENABLED=1 GOOS=linux go build -o . ./cmd/sysclient
 
 
 
@@ -50,15 +50,17 @@ RUN mkdir logs
 COPY --from=builder /go/src/system/sysd . 
 COPY --from=builder /go/src/system/sysclient .
 COPY --from=builder /go/src/system/skata .
+COPY --from=builder /go/src/system/pame .
 #COPY --from=builder /go/src/system/start_renter.sh .
 #COPY --from=builder /go/src/system/start_host.sh .
 COPY --from=builder /go/src/system/start_node.sh .
 COPY --from=builder /go/src/system/test_start_node.sh .
 COPY --from=builder /go/src/system/test_start_node_2.sh .
 COPY --from=builder /go/src/system/test_start_node_3.sh .
+COPY --from=builder /go/src/system/test_start_node_4.sh .
 COPY --from=builder /go/src/system/test_start_node_register_ips.sh .
 COPY ./host_server ./host_server
 COPY ./renter_server ./renter_server
-ENTRYPOINT ./test_start_node_3.sh 
+ENTRYPOINT ./test_start_node_register_ips.sh 
 #CMD ["./sysd &"]
 #RUN ["./sysd", "&"]

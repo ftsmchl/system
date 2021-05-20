@@ -4,7 +4,7 @@ echo "The script starts now"
 docker build -t system_1 .
 
 #create containers from our image
-docker run --hostname system_renter -d -v /home/fotis/truffle-example/build/contracts:/home/fotis/truffle-example/build/contracts --name system_renter -ti system_1 
+#docker run --hostname system_renter -d -v /home/fotis/truffle-example/build/contracts:/home/fotis/truffle-example/build/contracts --name system_renter -ti system_1 
 docker run --hostname system_host_1 -d -v /home/fotis/truffle-example/build/contracts:/home/fotis/truffle-example/build/contracts --name system_host_1 -ti system_1
 docker run --hostname system_host_2 -d -v /home/fotis/truffle-example/build/contracts:/home/fotis/truffle-example/build/contracts --name system_host_2 -ti system_1
 docker run --hostname system_host_3 -d -v /home/fotis/truffle-example/build/contracts:/home/fotis/truffle-example/build/contracts --name system_host_3 -ti system_1

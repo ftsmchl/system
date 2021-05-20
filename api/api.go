@@ -67,8 +67,9 @@ func (api *API) findContractsHandler(w http.ResponseWriter, r *http.Request) {
 func (api *API) setAccountAddressHandler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "Connecting ethereum account address...\n")
 	params := mux.Vars(r)
-	acc := params["address"]
-	api.wallet.SetPrimaryAccount(acc)
+	pubKey := params["publicKey"]
+	privKey := params["privateKey"]
+	api.wallet.SetPrimaryAccount(pubKey, privKey)
 }
 
 func (api *API) BuildRoutes() {
@@ -83,7 +84,7 @@ func (api *API) BuildRoutes() {
 	api.Router.HandleFunc("/findContracts", api.findContractsHandler)
 
 	//wallet commands
-	api.Router.HandleFunc("/addAccount/{address}", api.setAccountAddressHandler)
+	api.Router.HandleFunc("/addAccount/{publicKey}/{privateKey}", api.setAccountAddressHandler)
 
 }
 

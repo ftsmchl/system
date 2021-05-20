@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ftsmchl/system/modules/renter/renterfile"
+	"github.com/ftsmchl/system/my_merkleTree"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -27,38 +28,60 @@ type Renter struct {
 	//List of workers for uploading/downloading
 	workers map[string]*worker //[taskID] *worker
 
+	//merkleRoots of the file currently uploaded
+	roots *merkleRoots
+
 	//
 	renterFile *renterfile.Renterfile
 
 	uploadHeap uploadHeap
+
+	fileContractRevisions map[string]*contractRevision
 
 	mu sync.Mutex
 }
 
 //constructor of renter module
 func New() *Renter {
+	fmt.Println("ligo prin th dhmiourgia renter")
 	renter := &Renter{
-		auctionContracts: make(map[string]AuctionContract),
-		storageContracts: make(map[string]StorageContract),
-		hosts:            make(map[string]string),
-		workers:          make(map[string]*worker),
-		editors:          make(map[string]*Editor),
+		auctionContracts:      make(map[string]AuctionContract),
+		storageContracts:      make(map[string]StorageContract),
+		hosts:                 make(map[string]string),
+		workers:               make(map[string]*worker),
+		editors:               make(map[string]*Editor),
+		fileContractRevisions: make(map[string]*contractRevision),
 
 		uploadHeap: uploadHeap{
 			newUploads: make(chan struct{}, 1),
 		},
 	}
 
+	renter.roots.merkleTree = my_merkleTree.New()
+
 	go renter.threadedUpload()
 	return renter
+}
+
+type contractRevision struct {
+	revisionNumber  int
+	merkleRoot      []byte
+	signatureRenter []byte
+	signatureHost   []byte
+}
+
+type merkleRoots struct {
+	merkleTree     *my_merkleTree.Tree
+	sectorRoots    [][]byte
+	numMerkleRoots int //num of merkle roots
 }
 
 type StorageContract struct {
 	Address  string
 	TaskID   string
-	Duration int //(ms)
-	Host     string
-	IP       string
+	Duration int    //(ms)
+	Host     string //publicKey of host
+	IP       string //IP of host
 }
 
 type FinalAuction struct {
@@ -69,7 +92,7 @@ type FinalAuction struct {
 type AuctionContract struct {
 	Address    string `json : "address"`
 	TaskID     string `json : "taskid"`
-	Owner      string `json : "owner"`
+	Owner      string `json : "owner"` //publicKey of renter
 	Duration   int    `json : "duration"`
 	InitialBid int    `json : "initialbid"`
 	Host       string `json : "host"`

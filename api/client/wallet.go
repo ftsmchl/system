@@ -4,8 +4,9 @@ import (
 	"fmt"
 )
 
-func (c *Client) WalletAddAccount(acc string) error {
+func (c *Client) WalletAddAccount(publicKey, privateKey string) error {
 	fmt.Println("Inside httpClient.WalletAddAccount")
-	err := c.get("/addAccount/"+acc, nil)
+	source := "/addAccount/" + publicKey + "/" + privateKey
+	err := c.get(source, nil)
 	return err
 }

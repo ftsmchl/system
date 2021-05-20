@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	SectorSize = 5 //bytes
+	SectorSize = 4 //bytes
 )
 
 //RSCode is a ReedSolomon encoder/decoder

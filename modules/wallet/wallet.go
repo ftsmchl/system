@@ -2,7 +2,8 @@ package wallet
 
 type Wallet struct {
 	//ethereum account of our node
-	accountAddress string
+	pubKey  string
+	privKey string
 }
 
 //creation of an empty wallet
@@ -11,10 +12,11 @@ func New() *Wallet {
 }
 
 //sets the account we are going to use
-func (w *Wallet) SetPrimaryAccount(account string) {
-	w.accountAddress = account
+func (w *Wallet) SetPrimaryAccount(publicKey, privateKey string) {
+	w.pubKey = publicKey
+	w.privKey = privateKey
 }
 
 func (w *Wallet) GetPrimaryAccount() string {
-	return w.accountAddress
+	return w.pubKey
 }

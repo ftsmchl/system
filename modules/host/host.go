@@ -68,6 +68,8 @@ func (h *Host) Register(acc string) {
 		}
 	}
 
+	fmt.Println("I am inside Register func")
+
 	resp, err := http.Get("http://localhost:8001/hostRegister?IP=" + ourIP + "&ethereumAddress=" + acc)
 	if err != nil {
 		fmt.Println("err from httpGet : ", err)

@@ -30,5 +30,17 @@ func (h *Host) threadedListen() {
 
 func (h *Host) threadedHandleConn(conn net.Conn) {
 	message, _ := bufio.NewReader(conn).ReadString('\n')
-	fmt.Println("message received from renter : ", message)
+	messageBytesN := []byte(message)
+	messageBytes := messageBytesN[:len(messageBytesN)-1]
+	fmt.Println("message received from renter : ", message, "message in bytes containing n : ", messageBytesN, "message in bytes without N : ", messageBytes)
+
+	//receive actual data from renter
+	data, _ := bufio.NewReader(conn).ReadString('\n')
+	dataBytesN := []byte(data)
+	dataBytes := dataBytesN[:len(dataBytesN)-1]
+	fmt.Println("data received : ", dataBytes)
+	//data2, _ := bufio.NewReader(conn).ReadString('\n')
+	//data2BytesN := []byte(data2)
+	//data2Bytes := data2BytesN[:len(data2BytesN)-1]
+	//fmt.Println("data received : ", data2Bytes)
 }

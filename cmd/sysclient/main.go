@@ -72,18 +72,33 @@ func accountaddcmd(cmd *cobra.Command, args []string) {
 
 	//checks if the string given is a valid ethereum address
 	if len(args[0]) == 42 && helper.IsHex(args[0]) {
-		fmt.Println("args[0]", args[0])
+		fmt.Println("publicKey : ", args[0])
 	} else {
 		fmt.Println("The address is not a valid ethereum address, try again giving a valid one!!")
+		return
 	}
 
-	err := httpClient.WalletAddAccount(args[0])
+	if helper.IsHex(args[1]) {
+		fmt.Println("privateKey : ", args[1])
+	} else {
+		fmt.Println("private key is not valid")
+		return
+	}
+
+	pubKey := args[0]
+	privKey := args[1]
+
+	err := httpClient.WalletAddAccount(pubKey, privKey)
 	if err != nil {
 		//resp, err := http.Get("http://localhost:8000/auctionCreate")
 		fmt.Println("Something went wrong while adding our ethereum account address :", err)
 	} else {
 		fmt.Println("The ethereum account address has been set succesfully")
 	}
+}
+
+func testcmd(cmd *cobra.Command, args []string) {
+	fmt.Println("our args are : ", args[0], args[1])
 }
 
 var (
@@ -135,6 +150,13 @@ var (
 		Long:  "Find Auction Contracts and bid them",
 		Run:   hostfindContractscmd,
 	}
+
+	testCmd = &cobra.Command{
+		Use:   "test",
+		Short: "testing",
+		Long:  "A small test command",
+		Run:   testcmd,
+	}
 )
 
 func main() {
@@ -147,6 +169,7 @@ func main() {
 	root.AddCommand(renterCmd)
 	root.AddCommand(hostCmd)
 	root.AddCommand(accountAddCmd)
+	root.AddCommand(testCmd)
 
 	renterCmd.AddCommand(renterCreateContractsCmd)
 	renterCmd.AddCommand(renterUploadFileCmd)
