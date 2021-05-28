@@ -1,11 +1,12 @@
 package renter
 
 import (
-	"bytes"
+	//"bytes"
 	"fmt"
 	//"github.com/ftsmchl/system/my_merkleTree"
 	"net"
 	"sync"
+	//"time"
 )
 
 const (
@@ -33,15 +34,18 @@ type Editor struct {
 }
 
 func (e *Editor) close() {
-	e.renter.mu.Lock()
+	fmt.Println(" i am in start of e.close()")
+	//e.renter.mu.Lock()
 	e.mu.Lock()
 	e.clients--
 	e.mu.Unlock()
+	fmt.Println("e.clients = ", e.clients)
 	if e.clients == 0 {
 		fmt.Println("I will delete the editor")
 		delete(e.renter.editors, e.taskID)
 	}
-	e.renter.mu.Unlock()
+	//e.renter.mu.Unlock()
+	fmt.Println(" i am at the end of e.close()")
 }
 
 func (r *Renter) Editor(tID string) (_ *Editor, err error) {
@@ -71,7 +75,7 @@ func (r *Renter) Editor(tID string) (_ *Editor, err error) {
 		conn:       conn,
 		taskID:     tID,
 		netAddress: r.storageContracts[tID].IP + ":8087",
-		renter:     r,
+		//renter:     r,
 	}
 
 	r.editors[tID] = editor
@@ -83,7 +87,9 @@ func (r *Renter) Editor(tID string) (_ *Editor, err error) {
 }
 
 func initiateRevisionLoop(contract StorageContract) (net.Conn, error) {
+	fmt.Println("i am gonna dial : ", contract.IP)
 	c, err := net.Dial("tcp", contract.IP+":8087")
+	//c, err := net.DialTimeout("tcp", contract.IP+":8087", 55*time.Second)
 	if err != nil {
 		return nil, err
 	}
@@ -95,20 +101,26 @@ func initiateRevisionLoop(contract StorageContract) (net.Conn, error) {
 func (e *Editor) upload(data []byte) {
 	//send the data to host
 	fmt.Println("I am about to upload : ", data)
-	fmt.Fprintf(e.conn, string(data)+"\n")
+	//fmt.Fprintf(e.conn, string(data)+"\n")
+	e.conn.Write(data)
 
 	//t := my_merkleTree.New()
 
-	buf := bytes.NewBuffer(data)
-	e.renter.mu.Lock()
-	for buf.Len() > 0 {
-		e.renter.roots.merkleTree.Push(buf.Next(SegmentSize))
-	}
-	e.renter.roots.numMerkleRoots++
+	/*
+		buf := bytes.NewBuffer(data)
+		e.renter.mu.Lock()
+		fmt.Println("Mesa sto lock")
+		/*
+			for buf.Len() > 0 {
+				e.renter.roots.merkleTree.Push(buf.Next(SegmentSize))
+			}
+			e.renter.roots.numMerkleRoots++
 
-	sectorRoot := e.renter.roots.merkleTree.Root()
-	e.renter.roots.sectorRoots = append(e.renter.roots.sectorRoots, sectorRoot)
-	e.renter.mu.Unlock()
+			sectorRoot := e.renter.roots.merkleTree.Root()
+			e.renter.roots.sectorRoots = append(e.renter.roots.sectorRoots, sectorRoot)
+			e.renter.mu.Unlock()
+			fmt.Println("E3w apo to lock")
 
-	fmt.Println("To root tou sector p 8a ginei upload einai : ", sectorRoot)
+			fmt.Println("To root tou sector p 8a ginei upload einai : ", sectorRoot)
+	*/
 }

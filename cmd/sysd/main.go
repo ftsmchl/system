@@ -25,6 +25,7 @@ func main() {
 		Run:   versionCmd,
 	})
 	if err := root.Execute(); err != nil {
+		fmt.Println("Kalhspera")
 		os.Exit(64)
 	}
 }

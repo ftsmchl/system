@@ -1,6 +1,6 @@
 var Web3 = require('web3');
-var provider = 'ws://192.168.1.4:7545';
-//var provider = 'ws://192.168.0.147:7545';
+//var provider = 'ws://192.168.1.4:7545';
+var provider = 'ws://192.168.0.147:7545';
 
 const JsonFind = require('json-find');
 //sleep 
@@ -219,6 +219,7 @@ app.get('/findAuction', async (req, res)=>{
 					await auctionContract.methods.placeOffer(initialBid - 10).send({from : acc, gas : 6700000}, function(error, txHash){	
 						if (error) {
 							console.log("method place offer could not be called cause of an error")	
+							console.log("error : ", error)
 							error = true
 						} else {
 							console.log("method place offer has been mined with txHash : ", txHash)		
@@ -242,8 +243,9 @@ app.get('/findAuction', async (req, res)=>{
 						//node = node.getNext()
 						error = true
 						//auctionList.removeAt(position)
-						let data = JsonFind(error)
+						let data = JsonFind(error.data)
 						let reason = data.checkKey('reason')
+						console.log("error : ", error)
 						console.log("reason : ", reason)
 
 					})

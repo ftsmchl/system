@@ -38,6 +38,11 @@ type Renter struct {
 
 	fileContractRevisions map[string]*contractRevision
 
+	//in use
+	host_in_use map[string]bool
+
+	inUseMu sync.Mutex
+
 	mu sync.Mutex
 }
 
@@ -51,13 +56,19 @@ func New() *Renter {
 		workers:               make(map[string]*worker),
 		editors:               make(map[string]*Editor),
 		fileContractRevisions: make(map[string]*contractRevision),
+		host_in_use:           make(map[string]bool),
+		roots: &merkleRoots{
+			merkleTree: my_merkleTree.New(),
+		},
 
 		uploadHeap: uploadHeap{
 			newUploads: make(chan struct{}, 1),
 		},
 	}
 
-	renter.roots.merkleTree = my_merkleTree.New()
+	fmt.Println("Prin to roots")
+	//renter.roots.merkleTree = my_merkleTree.New()
+	fmt.Println("meta to roots")
 
 	go renter.threadedUpload()
 	return renter
