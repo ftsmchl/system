@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strings"
 )
 
 func (h *Host) initNetworking(address string) (err error) {
@@ -30,39 +31,36 @@ func (h *Host) threadedListen() {
 
 func (h *Host) threadedHandleConn(conn net.Conn) {
 
-	//file, _ := os.OpenFile("logs/data", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	reader := bufio.NewReader(conn)
 
-	/*
-		message, _ := bufio.NewReader(conn).ReadString('\n')
-		messageBytesN := []byte(message)
-		messageBytes := messageBytesN[:len(messageBytesN)-1]
-		fmt.Println("message received from renter : ", message, "message in bytes containing n : ", messageBytesN, "message in bytes without N : ", messageBytes)
-
-	*/
-	//receive actual data from renter
-
-	/*
-		data := make([]byte, 4)
-		n, err := conn.Read(data)
-		if err != nil {
-			fmt.Println("Wrong reading from conn : ", err)
-		}
-		fmt.Println("We read : ", n, " bytes")
-	*/
-	//dataBytesN := []byte(data)
-	//dataBytes := dataBytesN[:len(dataBytesN)-1]
-	//fmt.Println("data received : ", data)
-
-	msg, err := bufio.NewReader(conn).ReadBytes('\n')
+	msg1, err := reader.ReadString('\n')
+	fmt.Println("We read msg1 : ", strings.TrimRight(msg1, "\n"))
 	fmt.Println("err : ", err)
 
-	fmt.Println("msg read is ", msg)
-	fmt.Println("msg.len is : ", len(msg))
+	if strings.TrimRight(msg1, "\n") == "Upload" {
+		fmt.Println("mesa sto if")
+		h.uploadProtocol(conn, reader)
+	} else {
+
+		//	h.uploadProtocol(conn, reader)
+	}
 
 	/*
-		data2, _ := bufio.NewReader(conn).ReadString('\n')
-		data2BytesN := []byte(data2)
-		data2Bytes := data2BytesN[:len(data2BytesN)-1]
-		fmt.Println("data received : ", data2Bytes)
+
+		msg, err := reader.ReadBytes('\n')
+
+		fmt.Println("msg read is ", msg)
+		fmt.Println("err : ", err)
+		fmt.Println("msg.len is : ", len(msg))
 	*/
+
+}
+
+func (h *Host) uploadProtocol(c net.Conn, r *bufio.Reader) {
+	//reader := bufio.NewReader(c)
+
+	data, err := r.ReadBytes('\n')
+	fmt.Println("data received : ", data)
+	fmt.Println("err : ", err)
+	fmt.Fprintf(c, "Data\n")
 }

@@ -1,9 +1,11 @@
 package renter
 
 import (
+	//"bufio"
 	"bytes"
 	"fmt"
 	"net"
+	//"strings"
 	"time"
 )
 
@@ -62,10 +64,7 @@ func (w *worker) processUploadChunk(uc *unfinishedUploadChunk) (nextChunk *unfin
 //will perform some upload work
 func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 	fmt.Println("I am currently a worker in upload")
-	//w.mu.Lock()
 	taskID := w.contract.TaskID
-	//hostPublicKey := w.renter.storageContracts[taskID].Host
-
 	/*
 		_, exist := w.renter.host_in_use[hostPublicKey]
 
@@ -105,19 +104,18 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 		w.mu.Unlock()
 	*/
 
-	conn, err := net.DialTimeout("tcp", w.renter.storageContracts[taskID].IP+":8087", 45*time.Second)
+	conn, err := net.DialTimeout("tcp", w.renter.storageContracts[taskID].IP+":8087", 100*time.Second)
+	//r := bufio.NewReader(conn)
+
 	fmt.Println("Ip is ", w.renter.storageContracts[taskID].IP)
 	if err != nil {
 		fmt.Println("err sto conn : ", err)
 		return
 	}
 
-	//	fmt.Fprintf(conn, "Upload\n")
-	//fmt.Fprintf(conn, string(uc.physicalChunkData[pieceIndex])+"\n")
-
-	//	uc.mu.Lock()
+	fmt.Fprintf(conn, "Upload\n")
+	//	_, _ = conn.Write([]byte("Upload"))
 	data := uc.physicalChunkData[pieceIndex]
-	//	uc.mu.Unlock()
 
 	n, err := conn.Write(uc.physicalChunkData[pieceIndex])
 	if err != nil {
@@ -126,14 +124,17 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 	fmt.Println("n of bytes sent is : ", n)
 	fmt.Println("we sent : ", uc.physicalChunkData[pieceIndex])
 
-	//w.mu.Unlock()
+	//reader := bufio.NewReader(conn)
 
-	//	w.renter.inUseMu.Lock()
-	_ = conn.Close()
-	//	delete(w.renter.host_in_use, hostPublicKey)
-	//	w.renter.inUseMu.Unlock()
+	/*
+		msg, err := r.ReadString('\n')
+		fmt.Println("We got reply : ", strings.TrimRight(msg, "\n"))
+		fmt.Println("err : ", err)
+	*/
 
-	//data := uc.physicalChunkData[pieceIndex]
+	//_ = conn.Close()
+	defer conn.Close()
+
 	buf := bytes.NewBuffer(data)
 	w.renter.mu.Lock()
 	fmt.Println(" Mesa sto lock tou roots")
