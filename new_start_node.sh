@@ -5,7 +5,7 @@ case $HOSTNAME in
 	(system_renter) 
 		node renter_server/renter_server.js >> logs/renter_server.out &		
 		sleep 1
-		./sysclient accountAdd  0x5aff1d56bC44898c28f94Ba6018cBc49718a666E 0xa82daf7b03ed8307357319d367015c242cdba49d4be1298ca4c2e330d397d59e >> logs/sysclient.out &
+		./sysclient accountAdd  0x98dd8c8F3d14D68C7b3965B2f002480a2E540C1B 0x206075f758f210d571293ca7a2be51f09930a6c7947eea5638fee5b3e2922635 >> logs/sysclient.out &
 		sleep 3 
 		./system >> logs/ourInitServer.out &
 		#./sysclient renter createContracts >> logs/sysclient.out

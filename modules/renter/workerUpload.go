@@ -1,11 +1,15 @@
 package renter
 
 import (
-	//"bufio"
+	"bufio"
 	"bytes"
+	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"net"
-	//"strings"
+	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -100,8 +104,6 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 		e.upload(data)
 		fmt.Println("Right after e.Upload()")
 
-		//w.renter.editors[taskID] = e
-		w.mu.Unlock()
 	*/
 
 	conn, err := net.DialTimeout("tcp", w.renter.storageContracts[taskID].IP+":8087", 100*time.Second)
@@ -124,29 +126,69 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 	fmt.Println("n of bytes sent is : ", n)
 	fmt.Println("we sent : ", uc.physicalChunkData[pieceIndex])
 
-	//reader := bufio.NewReader(conn)
+	r := bufio.NewReader(conn)
+
+	reply, err2 := r.ReadString('\n')
+	fmt.Println("We got reply : ", strings.TrimRight(reply, "\n"))
+	fmt.Println("err : ", err2)
 
 	/*
-		msg, err := r.ReadString('\n')
-		fmt.Println("We got reply : ", strings.TrimRight(msg, "\n"))
-		fmt.Println("err : ", err)
+		reply := make([]byte, 5)
+		replyBytes, err := conn.Read(reply[:])
+		fmt.Println("we read bytes : ", replyBytes)
+		fmt.Println("err is : ", err)
 	*/
+
+	//fmt.Println("reply is ", string(reply))
 
 	//_ = conn.Close()
 	defer conn.Close()
 
 	buf := bytes.NewBuffer(data)
+
+	//calculating the merkle root of our adding sector
 	w.renter.mu.Lock()
+	var leaves int
 	fmt.Println(" Mesa sto lock tou roots")
 	for buf.Len() > 0 {
-		w.renter.roots.merkleTree.Push(buf.Next(SegmentSize))
+		leaves++
+		w.renter.contractRoots[taskID].merkleTree.Push(buf.Next(SegmentSize))
 	}
-	w.renter.roots.numMerkleRoots++
-	sectorRoot := w.renter.roots.merkleTree.Root()
-	w.renter.roots.sectorRoots = append(w.renter.roots.sectorRoots, sectorRoot)
+
+	w.renter.contractRoots[taskID].numMerkleRoots++
+	sectorRoot := w.renter.contractRoots[taskID].merkleTree.Root()
+	w.renter.contractRoots[taskID].sectorRoots = append(w.renter.contractRoots[taskID].sectorRoots, sectorRoot)
+
+	w.renter.fileContractRevisions[taskID].numLeaves += leaves
+	w.renter.fileContractRevisions[taskID].merkleRoot = sectorRoot
+	w.renter.fileContractRevisions[taskID].revisionNumber++
+	privateKey := w.renter.wallet.GetPrivateKey()
 	w.renter.mu.Unlock()
 	fmt.Println("Outside the lock")
-	fmt.Println("To root tou sector p egine upload einai : ", sectorRoot)
+	//fmt.Println("To root tou sector p egine upload einai : ", sectorRoot, "taskID : ", taskID)
+	fmt.Println("To merkleRoot einai : ", sectorRoot, "taskID : ", taskID)
+	numLeavesNum := w.renter.fileContractRevisions[taskID].numLeaves
+	fcRevisionNum := w.renter.fileContractRevisions[taskID].revisionNumber
+	fmt.Println("taskID : ", taskID, " numLeaves : ", w.renter.fileContractRevisions[taskID].numLeaves)
+
+	merkleRootHex := hex.EncodeToString(sectorRoot)
+	numLeaves := strconv.Itoa(numLeavesNum)
+	fcRevision := strconv.Itoa(fcRevisionNum)
+
+	fmt.Println("merkeRootHex is ", merkleRootHex)
+	fmt.Println("numLeaves is  ", numLeaves)
+	fmt.Println("fcRevision is  ", fcRevision)
+	fmt.Println("privateKey is ", privateKey)
+
+	resp1, err := http.Get("http://localhost:8000/signData?privateKey=" + privateKey + "&merkleRoot=" + merkleRootHex + "&numLeaves=" + numLeaves + "&fcRevision=" + fcRevision)
+	if err != nil {
+		fmt.Println("Error in sign.Get() : ", err)
+	} else {
+		text, _ := ioutil.ReadAll(resp1.Body)
+		fmt.Println("text received from sign is ", string(text))
+		ourSignature := string(text)
+		fmt.Fprintf(conn, ourSignature+"\n")
+	}
 
 	return
 

@@ -83,6 +83,44 @@ app.get('/showAllOffers', async (req, res) => {
 
 })
 
+//signing data
+
+app.get('/signData', async(req, res) => {
+	try {
+	console.log("i am inside signData")
+	let privateKey = req.query.privateKey
+	let merkleRoot = req.query.merkleRoot
+	let numLeaves = req.query.numLeaves
+	let fileContractRevision = req.query.fcRevision
+
+	let fcRevisionNumber = fileContractRevision
+	let numLeavesNumber = numLeaves
+
+
+
+	console.log("signData, privateKey = ", privateKey)
+	console.log("signData , numLeaves = ", numLeavesNumber)
+	console.log("signData , fcRevisionNumber = ", fcRevisionNumber)
+
+	let mRootHex = "0x" + merkleRoot
+	console.log("merkleRootHex is ", mRootHex)
+
+	let msgHash = web3.utils.soliditySha3(mRootHex, fcRevisionNumber, numLeavesNumber)
+
+
+	console.log("msgHash is ", msgHash)
+
+	var signature = web3.eth.accounts.sign(msgHash, privateKey)
+
+//	console.log("signature is : ", signature)
+	res.send(signature.signature)
+	} catch (e) {
+		console.log("TO catch einai : ", e)
+	}
+})
+
+
+
 //check provider's IP from usersRegistry Contract method
 app.get('/providerIP', async(req,res) => {
 	let providerPK = req.query.publicKey
@@ -223,7 +261,7 @@ app.get('/auctionCreate', async (req,res)=>{
 	//call the createStorage method from the auctionFactory contract
 	await auctionFactoryContract.methods.createStorageAuction(taskID,duration).send({from : acc,gas : 6700000}, function(error, txHash) {
 		if (error) {
-			console.log("Egine error : ",txHash)
+			console.log("Egine error : ",error)
 
 		} else {
 			console.log("function createStorageAuction has been mined with : ", txHash)

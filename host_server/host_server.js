@@ -58,6 +58,39 @@ app.get('/setMinimumBid', (req, res)=> {
 	res.send("Minimum Bid is set")
 });
 
+//signing data
+app.get('/signData', async(req, res) => {
+	try {
+		console.log("i am inside signData")
+		let privateKey = req.query.privateKey
+		let merkleRoot = req.query.merkleRoot
+		let numLeaves = req.query.numLeaves
+		let fcRevisionNumber = req.query.fcRevision
+
+		console.log("signData , privateKey = ", privateKey)
+		console.log("signData , numLeaves = ", numLeaves)
+		console.log("signData , fcRevisionNumber  = ", fcRevisionNumber)
+
+		let mRootHex = "0x" + merkleRoot
+		console.log("merkleRootHex is ", mRootHex)
+		
+		let msgHash = web3.utils.soliditySha3(mRootHex, fcRevisionNumber)
+
+		console.log("msgHash is : ", msgHash)
+		
+		var signature = web3.eth.accounts.sign(msgHash, privateKey)
+	
+		res.send(signature.signature)
+	}catch(e){
+		console.log("To catch einai : ", e)
+	}
+})
+
+
+
+
+
+
 //Event listener for the creation of an auction
 auctionFactoryContract.events.StorageAuctionCreated({})
 	.on('data', async function(event){
@@ -182,6 +215,18 @@ app.get('/activateContract', async (req, res) => {
 	})
 
 })
+
+app.get('/list', async(req, res)=> {
+	await lock.acquire('key', function(){
+	let numNodes = auctionList.count()
+	if (numNodes != 6) {
+		res.send("none")
+	}else {
+		res.send("koble")
+	}
+	}, function(err, ret){},{})
+})
+
 
 app.get('/findAuction', async (req, res)=>{
 	//res.send("Ok..")

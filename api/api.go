@@ -97,13 +97,12 @@ type API struct {
 }
 
 func New() *API {
+	//creation of wallet
+	w := wallet.New()
 	//creation of the renter
-	r := renter.New()
+	r := renter.New(w)
 	//creation of host
 	h := host.New()
-
-	//creation of our wallet
-	w := wallet.New()
 
 	return &API{
 		score:  42,

@@ -1,4 +1,4 @@
-From golang:1.14.3 as builder
+FROM golang:1.14.3 as builder
 WORKDIR /go/src/system_wrong
 
 COPY go.mod .
@@ -11,7 +11,7 @@ COPY . .
 #RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o sysd .
 RUN CGO_ENABLED=1 GOOS=linux go build -o . ./cmd/sysd
 RUN CGO_ENABLED=1 GOOS=linux go build -o . ./cmd/sysclient
-RUN CGO_ENABLED=1 GOOS=linux go build -o . init_server.go
+RUN CGO_ENABLED=1 GOOS=linux go build -o ./system init_server.go
 
 
 
@@ -27,11 +27,8 @@ WORKDIR /root/
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 RUN apt-get update \
-    && apt-get install -y curl \
+    && apt-get install -y curl vim net-tools netcat \
     && apt-get -y autoclean
-
-RUN apt-get install -y vim 
-RUN apt-get install -y net-tools 
 
 ENV NVM_DIR /usr/local/nvm
 ENV NODE_VERSION 12.18.3 
@@ -53,7 +50,6 @@ COPY --from=builder /go/src/system_wrong/sysclient .
 COPY --from=builder /go/src/system_wrong/system .
 COPY --from=builder /go/src/system_wrong/skata .
 COPY --from=builder /go/src/system_wrong/pame .
-COPY --from=builder /go/src/system_wrong/pame .
 #COPY --from=builder /go/src/system/start_renter.sh .
 #COPY --from=builder /go/src/system/start_host.sh .
 COPY --from=builder /go/src/system_wrong/start_node.sh .
@@ -65,9 +61,11 @@ COPY --from=builder /go/src/system_wrong/test_start_node_5.sh .
 COPY --from=builder /go/src/system_wrong/test_start_node_register_ips.sh .
 COPY --from=builder /go/src/system_wrong/new_start_node.sh .
 COPY --from=builder /go/src/system_wrong/init_server.go .
+COPY --from=builder /go/src/system_wrong/start_node_noSleep.sh .
 COPY ./host_server ./host_server
 COPY ./renter_server ./renter_server
-ENTRYPOINT ./new_start_node.sh 
+#ENTRYPOINT ./new_start_node.sh 
+ENTRYPOINT ./start_node_noSleep.sh 
 #ENTRYPOINT ./test_start_node_register_ips.sh 
 #CMD ["./sysd &"]
 #RUN ["./sysd", "&"]

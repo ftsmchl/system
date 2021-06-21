@@ -59,8 +59,16 @@ func (h *Host) threadedHandleConn(conn net.Conn) {
 func (h *Host) uploadProtocol(c net.Conn, r *bufio.Reader) {
 	//reader := bufio.NewReader(c)
 
-	data, err := r.ReadBytes('\n')
+	data := make([]byte, 4)
+	n, err := r.Read(data)
+	fmt.Println("n ", n)
 	fmt.Println("data received : ", data)
 	fmt.Println("err : ", err)
 	fmt.Fprintf(c, "Data\n")
+
+	//read renter's signature
+	renterSignature, err := r.ReadString('\n')
+	fmt.Println("err : ", err)
+	fmt.Println("Renter's Signature is : ", renterSignature)
+
 }

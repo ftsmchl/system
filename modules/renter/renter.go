@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ftsmchl/system/modules/renter/renterfile"
+	"github.com/ftsmchl/system/modules/wallet"
 	"github.com/ftsmchl/system/my_merkleTree"
 	"io/ioutil"
 	"net/http"
@@ -25,6 +26,9 @@ type Renter struct {
 	//[publicKey]IPV4
 	hosts map[string]string
 
+	//wallet
+	wallet *wallet.Wallet
+
 	//List of workers for uploading/downloading
 	workers map[string]*worker //[taskID] *worker
 
@@ -38,8 +42,8 @@ type Renter struct {
 
 	fileContractRevisions map[string]*contractRevision
 
-	//in use
-	host_in_use map[string]bool
+	//merkle roots for each taskID
+	contractRoots map[string]*merkleRoots
 
 	inUseMu sync.Mutex
 
@@ -47,7 +51,7 @@ type Renter struct {
 }
 
 //constructor of renter module
-func New() *Renter {
+func New(wal *wallet.Wallet) *Renter {
 	fmt.Println("ligo prin th dhmiourgia renter")
 	renter := &Renter{
 		auctionContracts:      make(map[string]AuctionContract),
@@ -56,10 +60,13 @@ func New() *Renter {
 		workers:               make(map[string]*worker),
 		editors:               make(map[string]*Editor),
 		fileContractRevisions: make(map[string]*contractRevision),
-		host_in_use:           make(map[string]bool),
-		roots: &merkleRoots{
-			merkleTree: my_merkleTree.New(),
-		},
+		wallet:                wal,
+		/*
+			roots: &merkleRoots{
+				merkleTree: my_merkleTree.New(),
+			},
+		*/
+		contractRoots: make(map[string]*merkleRoots),
 
 		uploadHeap: uploadHeap{
 			newUploads: make(chan struct{}, 1),
@@ -75,10 +82,13 @@ func New() *Renter {
 }
 
 type contractRevision struct {
-	revisionNumber  int
-	merkleRoot      []byte
-	signatureRenter []byte
-	signatureHost   []byte
+	revisionNumber int
+	numLeaves      int
+	merkleRoot     []byte
+	//signatureRenter []byte
+	signatureRenter string
+	//signatureHost   []byte
+	signatureHost string
 }
 
 type merkleRoots struct {
@@ -224,5 +234,12 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 	r.storageContractsMu.Lock()
 	r.storageContracts[storageContract.TaskID] = storageContract
 	r.storageContractsMu.Unlock()
+
+	r.mu.Lock()
+	r.contractRoots[taskid] = &merkleRoots{
+		merkleTree: my_merkleTree.New(),
+	}
+	r.fileContractRevisions[taskid] = &contractRevision{}
+	r.mu.Unlock()
 
 }

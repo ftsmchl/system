@@ -20,3 +20,11 @@ func (w *Wallet) SetPrimaryAccount(publicKey, privateKey string) {
 func (w *Wallet) GetPrimaryAccount() string {
 	return w.pubKey
 }
+
+func (w *Wallet) GetPublicKey() string {
+	return w.pubKey
+}
+
+func (w *Wallet) GetPrivateKey() string {
+	return w.privKey
+}
