@@ -7,16 +7,28 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sync"
 	"time"
+
+	"github.com/ftsmchl/system/modules/wallet"
 )
 
 type Host struct {
+	mu sync.Mutex
+
 	auctionsBid map[string]AuctionContract
 
 	storageContracts map[string]StorageContract
 
+	fileContractRevisions map[string]*contractRevision
+
+	contractRoots map[string]*merkleRoots
+
 	//mu sync.Mutex
 	listener net.Listener
+
+	//our wallet
+	wallet *wallet.Wallet
 }
 
 type AuctionContract struct {
@@ -39,12 +51,32 @@ type StorageContract struct {
 	Duration int
 }
 
-func New() *Host {
+type contractRevision struct {
+	revisionNumber  int
+	numLeaves       int
+	merkleRoot      []byte
+	signatureRenter []byte
+	signatureHost   []byte
+}
+
+type merkleRoots struct {
+	//	merkleTree     *my_merkleTree.Tree
+	sectorRoots    [][]byte
+	numMerkleRoots int
+}
+
+func New(wal *wallet.Wallet) *Host {
 	h := &Host{
 		auctionsBid: make(map[string]AuctionContract),
 
 		//[taskID]StorageContract maps a taskID with a StorageContract
 		storageContracts: make(map[string]StorageContract),
+
+		fileContractRevisions: make(map[string]*contractRevision),
+
+		contractRoots: make(map[string]*merkleRoots),
+
+		wallet: wal,
 	}
 
 	err := h.initNetworking("0.0.0.0:8087")
@@ -150,6 +182,16 @@ func (h *Host) FindContracts(acc string) {
 			fmt.Println("Owner : ", h.storageContracts[auctionContract.TaskID].Owner)
 			fmt.Println("TaskID : ", h.storageContracts[auctionContract.TaskID].TaskID)
 			fmt.Println("----------------")
+
+			h.mu.Lock()
+
+			//add our taskID to contractRoots map
+			h.contractRoots[storageContract.TaskID] = &merkleRoots{}
+
+			//add a file contractRevision for this taskID
+			h.fileContractRevisions[storageContract.TaskID] = &contractRevision{}
+
+			h.mu.Unlock()
 
 		} else {
 			fmt.Println("we did not win the auction!!!")

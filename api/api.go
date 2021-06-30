@@ -2,13 +2,14 @@ package api
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"sync"
+
 	"github.com/ftsmchl/system/modules/host"
 	"github.com/ftsmchl/system/modules/renter"
 	"github.com/ftsmchl/system/modules/wallet"
 	"github.com/gorilla/mux"
-	"io"
-	"net/http"
-	"sync"
 )
 
 func (api *API) scoreHandler(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +103,7 @@ func New() *API {
 	//creation of the renter
 	r := renter.New(w)
 	//creation of host
-	h := host.New()
+	h := host.New(w)
 
 	return &API{
 		score:  42,

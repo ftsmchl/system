@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ftsmchl/system/my_merkleTree"
 )
 
 func (w *worker) queueUploadChunk(uc *unfinishedUploadChunk) {
@@ -115,8 +117,13 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 		return
 	}
 
+	//Sending that we will use upload
 	fmt.Fprintf(conn, "Upload\n")
 	//	_, _ = conn.Write([]byte("Upload"))
+
+	//sending taskID
+	fmt.Fprintf(conn, taskID+"\n")
+
 	data := uc.physicalChunkData[pieceIndex]
 
 	n, err := conn.Write(uc.physicalChunkData[pieceIndex])
@@ -145,6 +152,7 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 	defer conn.Close()
 
 	buf := bytes.NewBuffer(data)
+	tree := my_merkleTree.New()
 
 	//calculating the merkle root of our adding sector
 	w.renter.mu.Lock()
@@ -152,11 +160,13 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 	fmt.Println(" Mesa sto lock tou roots")
 	for buf.Len() > 0 {
 		leaves++
-		w.renter.contractRoots[taskID].merkleTree.Push(buf.Next(SegmentSize))
+		//	w.renter.contractRoots[taskID].merkleTree.Push(buf.Next(SegmentSize))
+		tree.Push(buf.Next(SegmentSize))
 	}
 
 	w.renter.contractRoots[taskID].numMerkleRoots++
-	sectorRoot := w.renter.contractRoots[taskID].merkleTree.Root()
+	//sectorRoot := w.renter.contractRoots[taskID].merkleTree.Root()
+	sectorRoot := tree.Root()
 	w.renter.contractRoots[taskID].sectorRoots = append(w.renter.contractRoots[taskID].sectorRoots, sectorRoot)
 
 	w.renter.fileContractRevisions[taskID].numLeaves += leaves
@@ -166,7 +176,7 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 	w.renter.mu.Unlock()
 	fmt.Println("Outside the lock")
 	//fmt.Println("To root tou sector p egine upload einai : ", sectorRoot, "taskID : ", taskID)
-	fmt.Println("To merkleRoot einai : ", sectorRoot, "taskID : ", taskID)
+	fmt.Println("Sector's MerkleRoot : ", sectorRoot, "taskID : ", taskID)
 	numLeavesNum := w.renter.fileContractRevisions[taskID].numLeaves
 	fcRevisionNum := w.renter.fileContractRevisions[taskID].revisionNumber
 	fmt.Println("taskID : ", taskID, " numLeaves : ", w.renter.fileContractRevisions[taskID].numLeaves)

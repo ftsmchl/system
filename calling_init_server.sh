@@ -32,7 +32,7 @@ do
 	while [ $flag -gt 0 ]
 	do
 		echo "eimai mesa sto while to deutero"
-	#	sleep 1
+		sleep 1
 		newResult=$(curl -X GET 172.17.0.$i:8001/list -H "Accept : */*")
 		if grep -q "koble" <<< "$newResult";
 		then

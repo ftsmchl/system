@@ -1,5 +1,5 @@
 var Web3 = require('web3');
-var provider = 'ws://192.168.1.4:7545';
+var provider = 'ws://192.168.1.25:7545';
 //var provider = 'ws://192.168.0.147:7545';
 
 const JsonFind = require('json-find');
@@ -14,21 +14,21 @@ var express = require('express')
 var app = express();
 
 //initialize auctionFactory contract in order to be able to call methods from it
-var auctionFactoryContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/AuctionFactory.json");
+var auctionFactoryContents = fs.readFileSync("/home/fotis/truffle/system_contracts/build/contracts/AuctionFactory.json");
 var auctionFactoryjsonContent = JSON.parse(auctionFactoryContents);
 const auctionFactory = JsonFind(auctionFactoryjsonContent);
 auctionFactoryContract = new web3.eth.Contract(auctionFactoryjsonContent.abi,auctionFactory.checkKey('address'));
 
 //initialize auction contract in order to be able to call methods from it
-var auctionContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/Auction.json");
+var auctionContents = fs.readFileSync("/home/fotis/truffle/system_contracts/build/contracts/Auction.json");
 var auctionjsonContent = JSON.parse(auctionContents);
 
 //initialize storage contract in order to be able to call methods from it
-var storageContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/StorageAgreement.json")
+var storageContents = fs.readFileSync("/home/fotis/truffle/system_contracts/build/contracts/StorageAgreement.json")
 var storagejsonContent = JSON.parse(storageContents)
 
 //initialize usersRegistry Contract in order to be able to call methods from it
-var usersRegistryContents= fs.readFileSync("/home/fotis/truffle-example/build/contracts/UsersRegistry.json");
+var usersRegistryContents= fs.readFileSync("/home/fotis/truffle/system_contracts/build/contracts/UsersRegistry.json");
 var usersRegistryjsonContent = JSON.parse(usersRegistryContents);
 const usersRegistry = JsonFind(usersRegistryjsonContent)
 usersRegistryContract = new web3.eth.Contract(usersRegistryjsonContent.abi, usersRegistry.checkKey('address'))
@@ -74,7 +74,7 @@ app.get('/signData', async(req, res) => {
 		let mRootHex = "0x" + merkleRoot
 		console.log("merkleRootHex is ", mRootHex)
 		
-		let msgHash = web3.utils.soliditySha3(mRootHex, fcRevisionNumber)
+		let msgHash = web3.utils.soliditySha3(mRootHex, fcRevisionNumber, numLeaves)
 
 		console.log("msgHash is : ", msgHash)
 		
@@ -85,10 +85,6 @@ app.get('/signData', async(req, res) => {
 		console.log("To catch einai : ", e)
 	}
 })
-
-
-
-
 
 
 //Event listener for the creation of an auction

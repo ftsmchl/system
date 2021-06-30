@@ -3,13 +3,13 @@ package renter
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ftsmchl/system/modules/renter/renterfile"
-	"github.com/ftsmchl/system/modules/wallet"
-	"github.com/ftsmchl/system/my_merkleTree"
 	"io/ioutil"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/ftsmchl/system/modules/renter/renterfile"
+	"github.com/ftsmchl/system/modules/wallet"
 )
 
 type Renter struct {
@@ -61,11 +61,7 @@ func New(wal *wallet.Wallet) *Renter {
 		editors:               make(map[string]*Editor),
 		fileContractRevisions: make(map[string]*contractRevision),
 		wallet:                wal,
-		/*
-			roots: &merkleRoots{
-				merkleTree: my_merkleTree.New(),
-			},
-		*/
+
 		contractRoots: make(map[string]*merkleRoots),
 
 		uploadHeap: uploadHeap{
@@ -92,7 +88,7 @@ type contractRevision struct {
 }
 
 type merkleRoots struct {
-	merkleTree     *my_merkleTree.Tree
+	//	merkleTree     *my_merkleTree.Tree
 	sectorRoots    [][]byte
 	numMerkleRoots int //num of merkle roots
 }
@@ -237,7 +233,7 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 
 	r.mu.Lock()
 	r.contractRoots[taskid] = &merkleRoots{
-		merkleTree: my_merkleTree.New(),
+		//merkleTree: my_merkleTree.New(),
 	}
 	r.fileContractRevisions[taskid] = &contractRevision{}
 	r.mu.Unlock()

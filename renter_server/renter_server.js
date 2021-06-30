@@ -1,5 +1,5 @@
 var Web3 = require('web3');
-var provider = 'ws://192.168.1.4:7545';
+var provider = 'ws://192.168.1.25:7545';
 //var provider = 'ws://192.168.0.147:7545';
 
 const JsonFind = require('json-find')
@@ -27,11 +27,11 @@ var taskID
 var Data = null
 
 //Read all the json files needed for the contracts
-var contents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/tryecdsa2.json");
+var contents = fs.readFileSync("/home/fotis/truffle/system_contracts/build/contracts/tryecdsa2.json");
 var jsonContent = JSON.parse(contents);
-var auctionFactoryContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/AuctionFactory.json");
+var auctionFactoryContents = fs.readFileSync("/home/fotis/truffle/system_contracts/build/contracts/AuctionFactory.json");
 var auctionFactoryjsonContent = JSON.parse(auctionFactoryContents);
-var auctionContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/Auction.json");
+var auctionContents = fs.readFileSync("/home/fotis/truffle/system_contracts/build/contracts/Auction.json");
 var auctionjsonContent = JSON.parse(auctionContents);
 
 
@@ -50,7 +50,7 @@ contract = new web3.eth.Contract(jsonContent.abi, tryecdsa2.checkKey('address'))
 auctionFactoryContract = new web3.eth.Contract(auctionFactoryjsonContent.abi,auctionFactory.checkKey('address'));
 
 //initialize usersRegistry Contract in order to be able to call methods from it
-var usersRegistryContents = fs.readFileSync("/home/fotis/truffle-example/build/contracts/UsersRegistry.json");
+var usersRegistryContents = fs.readFileSync("/home/fotis/truffle/system_contracts/build/contracts/UsersRegistry.json");
 var usersRegistryjsonContent = JSON.parse(usersRegistryContents);
 const usersRegistry = JsonFind(usersRegistryjsonContent)
 usersRegistryContract = new web3.eth.Contract(usersRegistryjsonContent.abi, usersRegistry.checkKey('address'))
@@ -90,13 +90,8 @@ app.get('/signData', async(req, res) => {
 	console.log("i am inside signData")
 	let privateKey = req.query.privateKey
 	let merkleRoot = req.query.merkleRoot
-	let numLeaves = req.query.numLeaves
-	let fileContractRevision = req.query.fcRevision
-
-	let fcRevisionNumber = fileContractRevision
-	let numLeavesNumber = numLeaves
-
-
+	let fcRevisionNumber = req.query.fcRevision
+	let numLeavesNumber = req.query.numLeaves 
 
 	console.log("signData, privateKey = ", privateKey)
 	console.log("signData , numLeaves = ", numLeavesNumber)
@@ -107,15 +102,13 @@ app.get('/signData', async(req, res) => {
 
 	let msgHash = web3.utils.soliditySha3(mRootHex, fcRevisionNumber, numLeavesNumber)
 
-
 	console.log("msgHash is ", msgHash)
 
 	var signature = web3.eth.accounts.sign(msgHash, privateKey)
 
-//	console.log("signature is : ", signature)
 	res.send(signature.signature)
 	} catch (e) {
-		console.log("TO catch einai : ", e)
+		console.log("To catch einai : ", e)
 	}
 })
 

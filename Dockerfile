@@ -1,4 +1,4 @@
-FROM golang:1.14.3 as builder
+FROM golang:1.16.5 as builder
 WORKDIR /go/src/system_wrong
 
 COPY go.mod .
@@ -48,24 +48,16 @@ RUN mkdir logs
 COPY --from=builder /go/src/system_wrong/sysd . 
 COPY --from=builder /go/src/system_wrong/sysclient .
 COPY --from=builder /go/src/system_wrong/system .
-COPY --from=builder /go/src/system_wrong/skata .
 COPY --from=builder /go/src/system_wrong/pame .
 #COPY --from=builder /go/src/system/start_renter.sh .
 #COPY --from=builder /go/src/system/start_host.sh .
-COPY --from=builder /go/src/system_wrong/start_node.sh .
-COPY --from=builder /go/src/system_wrong/test_start_node.sh .
-COPY --from=builder /go/src/system_wrong/test_start_node_2.sh .
-COPY --from=builder /go/src/system_wrong/test_start_node_3.sh .
-COPY --from=builder /go/src/system_wrong/test_start_node_4.sh .
-COPY --from=builder /go/src/system_wrong/test_start_node_5.sh .
-COPY --from=builder /go/src/system_wrong/test_start_node_register_ips.sh .
-COPY --from=builder /go/src/system_wrong/new_start_node.sh .
+COPY --from=builder /go/src/system_wrong/register_nodes_IP.sh .
 COPY --from=builder /go/src/system_wrong/init_server.go .
 COPY --from=builder /go/src/system_wrong/start_node_noSleep.sh .
 COPY ./host_server ./host_server
 COPY ./renter_server ./renter_server
 #ENTRYPOINT ./new_start_node.sh 
 ENTRYPOINT ./start_node_noSleep.sh 
-#ENTRYPOINT ./test_start_node_register_ips.sh 
+#ENTRYPOINT ./register_nodes_IP.sh 
 #CMD ["./sysd &"]
 #RUN ["./sysd", "&"]
