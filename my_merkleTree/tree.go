@@ -3,7 +3,8 @@ package my_merkleTree
 import (
 	//"encoding/hex"
 	"errors"
-	"github.com/miguelmota/go-solidity-sha3"
+
+	solsha3 "github.com/miguelmota/go-solidity-sha3"
 )
 
 type Tree struct {
