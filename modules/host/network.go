@@ -84,6 +84,7 @@ func (h *Host) uploadProtocol(c net.Conn, r *bufio.Reader) {
 	renterSignature, err := r.ReadString('\n')
 	fmt.Println("err : ", err)
 	fmt.Println("Renter's Signature is : ", renterSignature)
+	renterSignature = strings.TrimRight(renterSignature, "\n")
 
 	//now we must sign the revision too
 	privateKey := h.wallet.GetPrivateKey()
@@ -126,12 +127,26 @@ func (h *Host) uploadProtocol(c net.Conn, r *bufio.Reader) {
 	fmt.Println("numLeaves : ", numLeaves)
 	fmt.Println("fcRevision : ", fcRevision)
 
+	var hostSignature string
+
 	resp1, err := http.Get("http://localhost:8001/signData?privateKey=" + privateKey + "&merkleRoot=" + merkleRootHex + "&numLeaves=" + numLeaves + "&fcRevision=" + fcRevision)
 	if err != nil {
 		fmt.Println("Err in http.Get : ", err)
 	} else {
-		text, _ := ioutil.ReadAll(resp1.Body)
-		fmt.Println("text received : ", string(text))
+		hostSignatureBytes, _ := ioutil.ReadAll(resp1.Body)
+		hostSignature = string(hostSignatureBytes)
+		fmt.Println("Our Signature : ", string(hostSignature))
+	}
+
+	storageContractAddress := h.storageContracts[taskID].Address
+
+	resp2, err := http.Get("http://localhost:8001/checkSignatures?sigRenter=" + renterSignature + "&sigHost=" + hostSignature + "&merkleRoot=" + merkleRootHex + "&numLeaves=" + numLeaves + "&fcRevision=" + fcRevision + "&address=" + storageContractAddress)
+
+	if err != nil {
+		fmt.Println("Err from response in checkSignatures : ", err)
+	} else {
+		text2, _ := ioutil.ReadAll(resp2.Body)
+		fmt.Println("Received : ", string(text2))
 	}
 
 }

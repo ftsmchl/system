@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/ftsmchl/system/api/client"
 	"github.com/ftsmchl/system/helper"
 	"github.com/spf13/cobra"
-	"os"
 	//"strings"
 )
 
@@ -65,6 +66,27 @@ func renteruploadfilecmd(cmd *cobra.Command, args []string) {
 		fmt.Println("file was uploaded succesfully.. ")
 	}
 
+}
+
+func renterchallengehostcmd(cmd *cobra.Command, args []string) {
+	fmt.Println("Preparing to challenge...")
+
+	//check if the string given is a valid ethereum address
+	if len(args[0]) == 42 && helper.IsHex(args[0]) {
+		fmt.Println("Host Address To Be Challenged : ", args[0])
+	} else {
+		fmt.Println("The address is not a valid ethereum address, try again giving a valid one!!")
+		return
+	}
+
+	hostPublicKey := args[0]
+	err := httpClient.RenterChallengeHost(hostPublicKey)
+
+	if err != nil {
+		fmt.Println("Challenge of Host did not run : ", err)
+	} else {
+		fmt.Println("Challenge of Host was succesful")
+	}
 }
 
 func accountaddcmd(cmd *cobra.Command, args []string) {
@@ -137,6 +159,13 @@ var (
 		Run:   renteruploadfilecmd,
 	}
 
+	renterChallengeHostCmd = &cobra.Command{
+		Use:   "challengeHost",
+		Short: "challenge a host",
+		Long:  "challenge a host for a prove",
+		Run:   renterchallengehostcmd,
+	}
+
 	hostRegisterToMarketCmd = &cobra.Command{
 		Use:   "register",
 		Short: "Register to market",
@@ -171,9 +200,12 @@ func main() {
 	root.AddCommand(accountAddCmd)
 	root.AddCommand(testCmd)
 
+	//renter Commands
 	renterCmd.AddCommand(renterCreateContractsCmd)
 	renterCmd.AddCommand(renterUploadFileCmd)
+	renterCmd.AddCommand(renterChallengeHostCmd)
 
+	//host Commands
 	hostCmd.AddCommand(hostFindContractsCmd)
 	hostCmd.AddCommand(hostRegisterToMarketCmd)
 

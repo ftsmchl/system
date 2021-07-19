@@ -61,6 +61,7 @@ app.get('/setMinimumBid', (req, res)=> {
 //signing data
 app.get('/signData', async(req, res) => {
 	try {
+		console.log("----------------")
 		console.log("i am inside signData")
 		let privateKey = req.query.privateKey
 		let merkleRoot = req.query.merkleRoot
@@ -79,12 +80,58 @@ app.get('/signData', async(req, res) => {
 		console.log("msgHash is : ", msgHash)
 		
 		var signature = web3.eth.accounts.sign(msgHash, privateKey)
+		console.log("----------------")
 	
 		res.send(signature.signature)
 	}catch(e){
 		console.log("To catch einai : ", e)
 	}
 })
+
+function signData(myData, privateKey) {
+	let signature = web3.eth.accounts.sign(myData, privateKey);
+	return signature;
+}
+
+app.get('/checkSignatures', async(req, res) => {
+	try{
+		console.log("----------------")
+		console.log("i am inside checkSignatures")
+		let sigRenter= req.query.sigRenter
+		let sigHost = req.query.sigHost
+		let merkleRoot = req.query.merkleRoot
+		let numLeaves = req.query.numLeaves
+		let fcRevisionNumber = req.query.fcRevision
+		let contractAddress = req.query.address
+		let mRootHex = "0x" + merkleRoot
+		
+		console.log("sigRenter : ", sigRenter)	
+		console.log("sigHost : ", sigHost)	
+		console.log("merkleRoot : ", merkleRoot)	
+		console.log("numLeaves : ", numLeaves)	
+		console.log("fcRevisionNumber : ", fcRevisionNumber)	
+		console.log("contractAddress : ", contractAddress)
+
+		
+		let storageContract = new web3.eth.Contract(storagejsonContent.abi, contractAddress)
+
+		await storageContract.methods.verifySignaturesChallenge(sigRenter, sigHost, mRootHex, fcRevisionNumber, numLeaves).call(function(error, result) {
+			if (error) {
+				console.log(error)
+			} else {
+				console.log("check returned : ", result)
+				res.send(result)
+			}
+		})
+
+		
+		console.log("----------------")
+
+	}catch(e){
+		console.log("To catch einai : ", e)
+	}
+})
+
 
 
 //Event listener for the creation of an auction

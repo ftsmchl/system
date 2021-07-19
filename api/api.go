@@ -41,8 +41,16 @@ func (api *API) uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Fprintf(w, "There was an error uploading the file : %s", err)
 	} else {
-		io.WriteString(w, "File uploaded succesfully bruh...")
+		io.WriteString(w, "File was uploaded succesfully...")
 	}
+}
+
+func (api *API) challengeHostHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	pathTrimmed := params["hostPublicKey"]
+	//fmt.Println("host to be challenged (renter) : ", pathTrimmed)
+	//io.WriteString(w, "Host has been challenged succesfully")
+	fmt.Fprintf(w, "Host %s has been challenged succesfully ...", pathTrimmed)
 }
 
 func (api *API) hostRegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -75,10 +83,12 @@ func (api *API) setAccountAddressHandler(w http.ResponseWriter, r *http.Request)
 
 func (api *API) BuildRoutes() {
 	api.Router = mux.NewRouter()
+
 	//renter commands
 	api.Router.HandleFunc("/score", api.scoreHandler)
 	api.Router.HandleFunc("/createAuction", api.createAuctionHandler)
 	api.Router.HandleFunc("/uploadFile/{path}", api.uploadFileHandler)
+	api.Router.HandleFunc("/challengeHost/{hostPublicKey}", api.challengeHostHandler)
 
 	//host commands
 	api.Router.HandleFunc("/hostRegister", api.hostRegisterHandler)

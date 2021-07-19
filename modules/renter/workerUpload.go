@@ -119,13 +119,12 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 
 	//Sending that we will use upload
 	fmt.Fprintf(conn, "Upload\n")
-	//	_, _ = conn.Write([]byte("Upload"))
 
-	//sending taskID
+	//Sending taskID
 	fmt.Fprintf(conn, taskID+"\n")
 
+	//Sending Data sector
 	data := uc.physicalChunkData[pieceIndex]
-
 	n, err := conn.Write(uc.physicalChunkData[pieceIndex])
 	if err != nil {
 		fmt.Println("Mistakes were made in conn.Write.. ", err)
@@ -133,22 +132,12 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 	fmt.Println("n of bytes sent is : ", n)
 	fmt.Println("we sent : ", uc.physicalChunkData[pieceIndex])
 
+	//Read Reply from host that he received Data
 	r := bufio.NewReader(conn)
-
 	reply, err2 := r.ReadString('\n')
 	fmt.Println("We got reply : ", strings.TrimRight(reply, "\n"))
 	fmt.Println("err : ", err2)
 
-	/*
-		reply := make([]byte, 5)
-		replyBytes, err := conn.Read(reply[:])
-		fmt.Println("we read bytes : ", replyBytes)
-		fmt.Println("err is : ", err)
-	*/
-
-	//fmt.Println("reply is ", string(reply))
-
-	//_ = conn.Close()
 	defer conn.Close()
 
 	buf := bytes.NewBuffer(data)
@@ -164,38 +153,37 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 		tree.Push(buf.Next(SegmentSize))
 	}
 
+	//Add sectorRoot to our sector Roots
 	w.renter.contractRoots[taskID].numMerkleRoots++
-	//sectorRoot := w.renter.contractRoots[taskID].merkleTree.Root()
 	sectorRoot := tree.Root()
 	w.renter.contractRoots[taskID].sectorRoots = append(w.renter.contractRoots[taskID].sectorRoots, sectorRoot)
 
+	//Update our fileContract Revision
 	w.renter.fileContractRevisions[taskID].numLeaves += leaves
 	w.renter.fileContractRevisions[taskID].merkleRoot = sectorRoot
 	w.renter.fileContractRevisions[taskID].revisionNumber++
-	privateKey := w.renter.wallet.GetPrivateKey()
+	privateKey := w.renter.wallet.GetPrivateKey() //Get our PrivateKey
 	w.renter.mu.Unlock()
 	fmt.Println("Outside the lock")
-	//fmt.Println("To root tou sector p egine upload einai : ", sectorRoot, "taskID : ", taskID)
 	fmt.Println("Sector's MerkleRoot : ", sectorRoot, "taskID : ", taskID)
 	numLeavesNum := w.renter.fileContractRevisions[taskID].numLeaves
 	fcRevisionNum := w.renter.fileContractRevisions[taskID].revisionNumber
 	fmt.Println("taskID : ", taskID, " numLeaves : ", w.renter.fileContractRevisions[taskID].numLeaves)
 
+	//Sign our Revision
 	merkleRootHex := hex.EncodeToString(sectorRoot)
 	numLeaves := strconv.Itoa(numLeavesNum)
 	fcRevision := strconv.Itoa(fcRevisionNum)
-
 	fmt.Println("merkeRootHex is ", merkleRootHex)
 	fmt.Println("numLeaves is  ", numLeaves)
 	fmt.Println("fcRevision is  ", fcRevision)
 	fmt.Println("privateKey is ", privateKey)
-
 	resp1, err := http.Get("http://localhost:8000/signData?privateKey=" + privateKey + "&merkleRoot=" + merkleRootHex + "&numLeaves=" + numLeaves + "&fcRevision=" + fcRevision)
 	if err != nil {
 		fmt.Println("Error in sign.Get() : ", err)
 	} else {
 		text, _ := ioutil.ReadAll(resp1.Body)
-		fmt.Println("text received from sign is ", string(text))
+		fmt.Println("Our Signature : ", string(text))
 		ourSignature := string(text)
 		fmt.Fprintf(conn, ourSignature+"\n")
 	}

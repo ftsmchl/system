@@ -2,9 +2,10 @@ package renter
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/ftsmchl/system/modules"
 	"github.com/ftsmchl/system/modules/renter/renterfile"
-	"os"
 )
 
 func (r *Renter) Upload(source string) error {
