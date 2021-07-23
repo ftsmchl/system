@@ -34,6 +34,8 @@ var auctionFactoryjsonContent = JSON.parse(auctionFactoryContents);
 var auctionContents = fs.readFileSync("/home/fotis/truffle/system_contracts/build/contracts/Auction.json");
 var auctionjsonContent = JSON.parse(auctionContents);
 
+var storageContents = fs.readFileSync("/home/fotis/truffle/system_contracts/build/contracts/StorageAgreement.json")
+var storagejsonContent = JSON.parse(storageContents)
 
 //declaring min and max for calculating a random taskID and then converting its string representation to SHA3
 const max = Math.pow(2, 256)
@@ -84,6 +86,49 @@ app.get('/showAllOffers', async (req, res) => {
 })
 
 //signing data
+
+app.get('/challengeHost', async(req, res) => {
+	try {
+		console.log("------------------------")
+		console.log("i am inside challengeHost")
+		let sigRenter = req.query.sigRenter
+		let sigHost = req.query.sigHost
+		let merkleRoot = req.query.merkleRoot
+		let numLeaves = req.query.numLeaves
+		let fcRevision = req.query.fcRevision
+		let contractAddress = req.query.address	
+		let acc = req.query.acc
+
+		let mRootHex = "0x" + merkleRoot
+
+		let storageContract = new web3.eth.Contract(storagejsonContent.abi, contractAddress)	
+	
+		await storageContract.methods.challengeProvider(sigRenter, sigHost, mRootHex, fcRevision, numLeaves).send({from : acc, gas : 6700000}, function(error, txHash) {
+			if (error) {
+				console.log("method challenge could not be called cause of an error")
+			} else {
+				console.log("method challenge has been mined with txHash : ", txHash)
+			}
+		})
+		.on('receipt', async function(receipt){
+			console.log("receipt ", receipt)
+			res.send("Ok")
+		})
+		.on('error', async function(error){
+			let data = JsonFind(error.data)
+			let reason = data.checkKey('reason')
+			console.log("reason : ", reason)
+			res.send("no Ok")
+		})
+		.catch(function(err){
+			console.log("There is an error when calling challenge")
+		})
+
+		console.log("------------------------")
+	} catch (e) {
+		console.log("To catch einai : ", e)
+	}
+})
 
 app.get('/signData', async(req, res) => {
 	try {

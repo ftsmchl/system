@@ -55,8 +55,8 @@ type contractRevision struct {
 	revisionNumber  int
 	numLeaves       int
 	merkleRoot      []byte
-	signatureRenter []byte
-	signatureHost   []byte
+	signatureRenter string
+	signatureHost   string
 }
 
 type merkleRoots struct {

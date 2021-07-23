@@ -5,5 +5,5 @@ docker rm system_renter
 
 for i in {1..8}
 do
-	docker rm system_host_$i
+	docker rm system_host_$i 
 done

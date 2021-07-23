@@ -33,7 +33,9 @@ case $HOSTNAME in
 			fi
 		done
 
-		result=$(./sysclient accountAdd  0x8e169AbBf12dd68433E3bB1Fb0cd20Fd50263F11 0x773aee59f8099107c89d690e2b165e4b5f0575e32f92840f28ee7f4c4a73963f) 
+		#result=$(./sysclient accountAdd  0x8e169AbBf12dd68433E3bB1Fb0cd20Fd50263F11 0x773aee59f8099107c89d690e2b165e4b5f0575e32f92840f28ee7f4c4a73963f) 
+		result=$(./sysclient accountAdd  0xA03987F3f20963287ad25e574ab1F9893189Cf3a 0x7e07a3badf7bceeff5b234e5051f088da563e69d9e53051d0a28cc70938536ee) 
+		
 
 		if grep -q "succesfully" <<< "$result";
 		then

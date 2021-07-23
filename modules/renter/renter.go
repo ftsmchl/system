@@ -1,10 +1,12 @@
 package renter
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -25,6 +27,9 @@ type Renter struct {
 
 	//[publicKey]IPV4
 	hosts map[string]string
+
+	//[publicKey] taskID
+	hostTaskID map[string]string
 
 	//wallet
 	wallet *wallet.Wallet
@@ -57,6 +62,7 @@ func New(wal *wallet.Wallet) *Renter {
 		auctionContracts:      make(map[string]AuctionContract),
 		storageContracts:      make(map[string]StorageContract),
 		hosts:                 make(map[string]string),
+		hostTaskID:            make(map[string]string),
 		workers:               make(map[string]*worker),
 		editors:               make(map[string]*Editor),
 		fileContractRevisions: make(map[string]*contractRevision),
@@ -134,6 +140,35 @@ func (r *Renter) PrintContracts() {
 	}
 	r.storageContractsMu.Unlock()
 	r.updateWorkerPool()
+}
+
+func (r *Renter) ChallengeHost(publicKey string) error {
+	fmt.Println("TASkID : ", r.hostTaskID[publicKey])
+
+	taskID := r.hostTaskID[publicKey]
+	contractAddress := r.storageContracts[taskID].Address
+	ourAcc := r.wallet.GetPublicKey()
+
+	signatureRenter := r.fileContractRevisions[taskID].signatureRenter
+	signatureHost := r.fileContractRevisions[taskID].signatureHost
+	revisionNum := r.fileContractRevisions[taskID].revisionNumber
+	numLeavesNum := r.fileContractRevisions[taskID].numLeaves
+	merkleRoot := r.fileContractRevisions[taskID].merkleRoot
+
+	merkleRootHex := hex.EncodeToString(merkleRoot)
+	numLeaves := strconv.Itoa(numLeavesNum)
+	fcRevision := strconv.Itoa(revisionNum)
+
+	resp1, err := http.Get("http://localhost:8000/challengeHost?sigRenter=" + signatureRenter + "&sigHost=" + signatureHost + "&merkleRoot=" + merkleRootHex + "&numLeaves=" + numLeaves + "&fcRevision=" + fcRevision + "&address=" + contractAddress + "&acc=" + ourAcc)
+
+	if err != nil {
+		fmt.Println("ERR in challenge host http ", err)
+	} else {
+		text, _ := ioutil.ReadAll(resp1.Body)
+		fmt.Println("Received : ", string(text))
+	}
+
+	return nil
 }
 
 //we will account address as an extra argument
@@ -235,6 +270,9 @@ func (r *Renter) AuctionCreate(wg *sync.WaitGroup, acc string) {
 	r.contractRoots[taskid] = &merkleRoots{
 		//merkleTree: my_merkleTree.New(),
 	}
+
+	r.hostTaskID[winner.WinningBidder] = storageContract.TaskID
+
 	r.fileContractRevisions[taskid] = &contractRevision{}
 	r.mu.Unlock()
 

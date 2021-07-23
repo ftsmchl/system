@@ -49,7 +49,6 @@ func (h *Host) threadedHandleConn(conn net.Conn) {
 		h.uploadProtocol(conn, reader)
 	} else {
 
-		//	h.uploadProtocol(conn, reader)
 	}
 
 	/*
@@ -108,16 +107,31 @@ func (h *Host) uploadProtocol(c net.Conn, r *bufio.Reader) {
 	fmt.Println("sectorRoots = ", h.contractRoots[taskID].numMerkleRoots)
 	h.contractRoots[taskID].sectorRoots = append(h.contractRoots[taskID].sectorRoots, sectorRoot)
 
+	//compute MerkleRoot until now
+	log2SectorSize := uint64(0)
+	for 1<<log2SectorSize < (4 / 2) {
+		log2SectorSize++
+	}
+	ct := my_merkleTree.NewCachedTree(log2SectorSize)
+
+	for _, root := range h.contractRoots[taskID].sectorRoots {
+		ct.Push(root)
+	}
+
+	merkleRootUntilNow := ct.Root()
+
 	//update contractRevision for this taskID
 	h.fileContractRevisions[taskID].revisionNumber++
 	h.fileContractRevisions[taskID].numLeaves += leaves
-	h.fileContractRevisions[taskID].merkleRoot = sectorRoot
+	h.fileContractRevisions[taskID].signatureRenter = renterSignature
+	h.fileContractRevisions[taskID].merkleRoot = merkleRootUntilNow
 
 	fmt.Println("Before returning")
 
 	h.mu.Unlock()
 
-	merkleRootHex := hex.EncodeToString(sectorRoot)
+	//merkleRootHex := hex.EncodeToString(sectorRoot)
+	merkleRootHex := hex.EncodeToString(merkleRootUntilNow)
 	numLeavesNum := h.fileContractRevisions[taskID].numLeaves
 	numLeaves := strconv.Itoa(numLeavesNum)
 	fcRevisionNum := h.fileContractRevisions[taskID].revisionNumber
@@ -140,6 +154,7 @@ func (h *Host) uploadProtocol(c net.Conn, r *bufio.Reader) {
 
 	storageContractAddress := h.storageContracts[taskID].Address
 
+	//check if renter's signature is OK
 	resp2, err := http.Get("http://localhost:8001/checkSignatures?sigRenter=" + renterSignature + "&sigHost=" + hostSignature + "&merkleRoot=" + merkleRootHex + "&numLeaves=" + numLeaves + "&fcRevision=" + fcRevision + "&address=" + storageContractAddress)
 
 	if err != nil {
@@ -149,4 +164,10 @@ func (h *Host) uploadProtocol(c net.Conn, r *bufio.Reader) {
 		fmt.Println("Received : ", string(text2))
 	}
 
+	//send our Signature to renter
+	fmt.Fprintf(c, hostSignature+"\n")
+
+	h.mu.Lock()
+	h.fileContractRevisions[taskID].signatureHost = hostSignature
+	h.mu.Unlock()
 }

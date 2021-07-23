@@ -158,9 +158,22 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 	sectorRoot := tree.Root()
 	w.renter.contractRoots[taskID].sectorRoots = append(w.renter.contractRoots[taskID].sectorRoots, sectorRoot)
 
+	//compute MerkleRoot until now
+	log2SectorSize := uint64(0)
+	for 1<<log2SectorSize < (4 / 2) {
+		log2SectorSize++
+	}
+	ct := my_merkleTree.NewCachedTree(log2SectorSize)
+
+	for _, root := range w.renter.contractRoots[taskID].sectorRoots {
+		ct.Push(root)
+	}
+
+	merkleRootUntilNow := ct.Root()
+
 	//Update our fileContract Revision
 	w.renter.fileContractRevisions[taskID].numLeaves += leaves
-	w.renter.fileContractRevisions[taskID].merkleRoot = sectorRoot
+	w.renter.fileContractRevisions[taskID].merkleRoot = merkleRootUntilNow
 	w.renter.fileContractRevisions[taskID].revisionNumber++
 	privateKey := w.renter.wallet.GetPrivateKey() //Get our PrivateKey
 	w.renter.mu.Unlock()
@@ -171,22 +184,36 @@ func (w *worker) upload(uc *unfinishedUploadChunk, pieceIndex uint64) {
 	fmt.Println("taskID : ", taskID, " numLeaves : ", w.renter.fileContractRevisions[taskID].numLeaves)
 
 	//Sign our Revision
-	merkleRootHex := hex.EncodeToString(sectorRoot)
+	merkleRootHex := hex.EncodeToString(merkleRootUntilNow)
 	numLeaves := strconv.Itoa(numLeavesNum)
 	fcRevision := strconv.Itoa(fcRevisionNum)
 	fmt.Println("merkeRootHex is ", merkleRootHex)
 	fmt.Println("numLeaves is  ", numLeaves)
 	fmt.Println("fcRevision is  ", fcRevision)
 	fmt.Println("privateKey is ", privateKey)
+
+	var ourSignature string
+
 	resp1, err := http.Get("http://localhost:8000/signData?privateKey=" + privateKey + "&merkleRoot=" + merkleRootHex + "&numLeaves=" + numLeaves + "&fcRevision=" + fcRevision)
 	if err != nil {
 		fmt.Println("Error in sign.Get() : ", err)
 	} else {
 		text, _ := ioutil.ReadAll(resp1.Body)
 		fmt.Println("Our Signature : ", string(text))
-		ourSignature := string(text)
+		ourSignature = string(text)
+		//send our signature to host
 		fmt.Fprintf(conn, ourSignature+"\n")
+
 	}
+
+	signatureHost, _ := r.ReadString('\n')
+	signatureHost = strings.TrimRight(signatureHost, "\n")
+	fmt.Println("Signature's Host : ", signatureHost)
+
+	w.renter.mu.Lock()
+	w.renter.fileContractRevisions[taskID].signatureHost = signatureHost
+	w.renter.fileContractRevisions[taskID].signatureRenter = ourSignature
+	w.renter.mu.Unlock()
 
 	return
 

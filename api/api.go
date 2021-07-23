@@ -50,7 +50,13 @@ func (api *API) challengeHostHandler(w http.ResponseWriter, r *http.Request) {
 	pathTrimmed := params["hostPublicKey"]
 	//fmt.Println("host to be challenged (renter) : ", pathTrimmed)
 	//io.WriteString(w, "Host has been challenged succesfully")
-	fmt.Fprintf(w, "Host %s has been challenged succesfully ...", pathTrimmed)
+	err := api.renter.ChallengeHost(pathTrimmed)
+
+	if err != nil {
+		fmt.Println("There was an error challenging the host ", err)
+	} else {
+		fmt.Fprintf(w, "Host %s has been challenged succesfully ...", pathTrimmed)
+	}
 }
 
 func (api *API) hostRegisterHandler(w http.ResponseWriter, r *http.Request) {
