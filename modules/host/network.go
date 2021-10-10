@@ -14,6 +14,10 @@ import (
 	"github.com/ftsmchl/system/my_merkleTree"
 )
 
+type Challenge struct {
+	address string `json : "address"`
+}
+
 func (h *Host) initNetworking(address string) (err error) {
 	h.listener, err = net.Listen("tcp", address)
 	if err != nil {
@@ -49,16 +53,67 @@ func (h *Host) threadedHandleConn(conn net.Conn) {
 		h.uploadProtocol(conn, reader)
 	} else {
 
+		//I heard a challenge ....
+
+		fmt.Println("challenge")
+		msg2, _ := reader.ReadString('\n')
+		address := strings.TrimRight(msg2, "\n")
+		fmt.Println("address = ", address)
+
+		//create a merkleproof
+
+		fmt.Println("taskID = ", h.taskID)
+
+		segmentSize := 2
+		segmentIndex := 0
+		sectorSize := 4
+
+		sectorIndex := segmentIndex / (sectorSize / segmentSize)
+		sectorSegment := segmentIndex % (sectorSize / segmentSize)
+
+		taskID := h.taskID
+		sectorBytes := h.sectors[taskID][sectorIndex]
+
+		//Build the storage proof for jist the sector
+		t := my_merkleTree.New()
+		t.SetIndex(uint64(sectorSegment))
+
+		buf := bytes.NewBuffer(sectorBytes)
+		for buf.Len() > 0 {
+			t.Push(buf.Next(segmentSize))
+		}
+
+		_, proof, _, _ := t.Prove()
+
+		base := proof[0]
+		hashSet := make([][32]byte, len(proof)-1)
+		for i, p := range proof[1:] {
+			copy(hashSet[i][:], p)
+		}
+
+		log2SectorSize := uint64(0)
+		for 1<<log2SectorSize < (sectorSize / segmentSize) {
+			log2SectorSize++
+		}
+
+		ct := my_merkleTree.NewCachedTree(log2SectorSize)
+		ct.SetIndex(uint64(segmentIndex))
+
+		for _, root := range h.contractRoots[taskID].sectorRoots {
+			ct.Push(root)
+		}
+
+		cachedProofSet := make([][]byte, len(hashSet)+1)
+		cachedProofSet[0] = base
+
+		for i := range hashSet {
+			cachedProofSet[i+1] = hashSet[i][:]
+		}
+
+		merkleRoot, proofSet, proofIndex, numLeaves := ct.Prove(cachedProofSet)
+		nextApotelesma := my_merkleTree.VerifyProof(merkleRoot, proofSet, proofIndex, numLeaves)
+		fmt.Println("Proof : ", nextApotelesma)
 	}
-
-	/*
-
-		msg, err := reader.ReadBytes('\n')
-
-		fmt.Println("msg read is ", msg)
-		fmt.Println("err : ", err)
-		fmt.Println("msg.len is : ", len(msg))
-	*/
 
 }
 
@@ -78,6 +133,8 @@ func (h *Host) uploadProtocol(c net.Conn, r *bufio.Reader) {
 	fmt.Println("data received : ", data)
 	fmt.Println("err : ", err)
 	fmt.Fprintf(c, "Data\n")
+
+	sector := data
 
 	//read renter's signature
 	renterSignature, err := r.ReadString('\n')
@@ -106,6 +163,7 @@ func (h *Host) uploadProtocol(c net.Conn, r *bufio.Reader) {
 	h.contractRoots[taskID].numMerkleRoots++
 	fmt.Println("sectorRoots = ", h.contractRoots[taskID].numMerkleRoots)
 	h.contractRoots[taskID].sectorRoots = append(h.contractRoots[taskID].sectorRoots, sectorRoot)
+	h.sectors[taskID] = append(h.sectors[taskID], sector)
 
 	//compute MerkleRoot until now
 	log2SectorSize := uint64(0)

@@ -24,6 +24,11 @@ type Host struct {
 
 	contractRoots map[string]*merkleRoots
 
+	//[taskID][]piece
+	sectors map[string][][]byte
+
+	taskID string
+
 	//mu sync.Mutex
 	listener net.Listener
 
@@ -75,6 +80,8 @@ func New(wal *wallet.Wallet) *Host {
 		fileContractRevisions: make(map[string]*contractRevision),
 
 		contractRoots: make(map[string]*merkleRoots),
+
+		sectors: make(map[string][][]byte),
 
 		wallet: wal,
 	}
@@ -173,6 +180,8 @@ func (h *Host) FindContracts(acc string) {
 			storageContract.TaskID = auctionContract.TaskID
 			storageContract.Owner = auctionContract.Owner
 			storageContract.Duration = auctionContract.Duration
+
+			h.taskID = storageContract.TaskID
 
 			h.storageContracts[auctionContract.TaskID] = storageContract
 			fmt.Println("Our storage Contract")

@@ -1,5 +1,8 @@
+
+var net = require('net')
+
 var Web3 = require('web3');
-var provider = 'ws://192.168.1.25:7545';
+var provider = 'ws://192.168.1.9:7545';
 //var provider = 'ws://192.168.0.147:7545';
 
 const JsonFind = require('json-find');
@@ -67,6 +70,8 @@ app.get('/signData', async(req, res) => {
 		let merkleRoot = req.query.merkleRoot
 		let numLeaves = req.query.numLeaves
 		let fcRevisionNumber = req.query.fcRevision
+		let acc = req.query.acc
+		let storageContract = req.query.address
 
 		console.log("signData , privateKey = ", privateKey)
 		console.log("signData , numLeaves = ", numLeaves)
@@ -92,6 +97,30 @@ function signData(myData, privateKey) {
 	let signature = web3.eth.accounts.sign(myData, privateKey);
 	return signature;
 }
+
+app.get('/verifyProof', async(req, res) => {
+	try {
+		console.log("---------------------")
+		let merkleRoot = req.query.merkleRoot 
+		let numLeaves = req.query.numLeaves
+		let data = req.query.data
+		let proofSet = req.query.proofSet
+
+		console.log("merkleRoot : ", merkleRoot)
+		console.log("numLeaves : ", numLeaves)
+		console.log("data : ", data)
+		console.log("proofSet : ", proofSet)
+
+
+		console.log("---------------------")
+
+
+
+	} catch(e) {
+		console.log("To catch einai : ", e)
+	}
+})
+
 
 app.get('/checkSignatures', async(req, res) => {
 	try{
@@ -131,6 +160,10 @@ app.get('/checkSignatures', async(req, res) => {
 		console.log("To catch einai : ", e)
 	}
 })
+
+
+
+
 
 
 
@@ -243,7 +276,41 @@ app.get('/activateContract', async (req, res) => {
 		}
 	})
 	.on('receipt', async function(receipt){
+
 		console.log("receipt ", receipt)
+
+
+		storageContract.events.ContractChallenged({})
+		.on('data', async function(event){
+			//let segmentIndex = parseInt(event.returnValues.proofIndex)
+			let segmentIndex = event.returnValues.proofIndex
+			let address = event.returnValues.storageContractAddress
+			let expDate = event.returnValues.expDate
+
+			console.log("I heard the challenge")
+			console.log("proofIndex ", segmentIndex)
+			console.log("storageContractAddress ", address)
+			console.log("expDate ", expDate)
+	
+
+			var HOST = '127.0.0.1';
+			var PORT = 8087;
+		
+			
+		challenge = JSON.stringify({segmentIndex : segmentIndex, address : address, expDate : expDate}) 
+
+
+			var client = new net.Socket();
+			client.connect(PORT, HOST, function() {
+				client.write("hello\n")
+				client.write(address + "\n")
+			})
+
+
+		})
+		.on('error', console.error)
+
+
 		res.send("OK")
 
 	})
